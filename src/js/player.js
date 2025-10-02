@@ -3,34 +3,64 @@ class Player {
     constructor(x, y, gameState) {
         this.x = x;
         this.y = y;
-        this.width = 50;
-        this.height = 50;
+        this.width = 70;
+        this.height = 70;
         this.gameState = gameState;
-        
+
         // 물리 속성
         this.velocityY = 0;
         this.gravity = 0.6;
         this.isGrounded = false;
         this.groundY = y;
-        
+
         // 점프 관련
         this.isJumping = false;
         this.jumpStartTime = 0;
         this.jumpPower = 0;
         this.maxJumpHeight = 250;
-        
+
         // 애니메이션
         this.frameIndex = 0;
         this.frameCount = 4;
-        this.animationSpeed = 0.1;
+        this.animationSpeed = 100; // 밀리초 단위 (100ms = 0.1초)
         this.animationTimer = 0;
-        
+
         // 입력 상태
         this.spacePressed = false;
         this.spaceDownTime = 0;
-        
+
+        // 이미지 로드
+        this.images = {
+            run: []
+        };
+        this.imagesLoaded = false;
+        this.loadImages();
+
         // 이벤트 리스너 등록
         this.initializeControls();
+    }
+
+    // 이미지 로드
+    loadImages() {
+        const imagesToLoad = 4; // run_1 ~ run_4
+        let loadedCount = 0;
+
+        // 달리기 이미지 로드
+        for (let i = 1; i <= 4; i++) {
+            const img = new Image();
+            img.onload = () => {
+                loadedCount++;
+                if (loadedCount === imagesToLoad) {
+                    this.imagesLoaded = true;
+                    console.log('플레이어 이미지 로드 완료!');
+                }
+            };
+            img.onerror = () => {
+                console.error(`이미지 로드 실패: cat_run_${i}.png`);
+            };
+            img.src = `src/assets/images/player/cat_run_${i}.png`;
+            this.images.run.push(img);
+        }
     }
     
     // 컨트롤 초기화
@@ -175,15 +205,39 @@ class Player {
     // 렌더링
     render(ctx) {
         ctx.save();
-        
+
+        // 이미지가 로드되었으면 이미지 렌더링
+        if (this.imagesLoaded && this.images.run.length > 0) {
+            const currentFrame = this.images.run[this.frameIndex];
+            if (currentFrame && currentFrame.complete) {
+                ctx.drawImage(currentFrame, this.x, this.y, this.width, this.height);
+            } else {
+                // 이미지 로드 중이면 임시 사각형 표시
+                this.renderPlaceholder(ctx);
+            }
+        } else {
+            // 이미지 로드 전 임시 렌더링
+            this.renderPlaceholder(ctx);
+        }
+
+        // 점프 차징 표시
+        if (this.spacePressed && this.isGrounded) {
+            this.renderJumpCharge(ctx);
+        }
+
+        ctx.restore();
+    }
+
+    // 임시 플레이스홀더 렌더링
+    renderPlaceholder(ctx) {
         // 플레이어 색상 (이미지 로드 전 임시)
         ctx.fillStyle = '#FF6B6B';
-        
+
         // 점프 중일 때 색상 변경
         if (this.isJumping) {
             ctx.fillStyle = '#FFB74D';
         }
-        
+
         // 점프 차징 중일 때 색상 변경
         if (this.spacePressed && this.isGrounded) {
             const chargeDuration = Date.now() - this.spaceDownTime;
@@ -195,25 +249,18 @@ class Player {
                 ctx.fillStyle = '#FF9800'; // 최소 차지
             }
         }
-        
+
         // 캐릭터 그리기
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        
+
         // 눈 그리기
         ctx.fillStyle = 'white';
         ctx.fillRect(this.x + 10, this.y + 10, 8, 8);
         ctx.fillRect(this.x + 25, this.y + 10, 8, 8);
-        
+
         ctx.fillStyle = 'black';
         ctx.fillRect(this.x + 12, this.y + 12, 4, 4);
         ctx.fillRect(this.x + 27, this.y + 12, 4, 4);
-        
-        // 점프 차징 표시
-        if (this.spacePressed && this.isGrounded) {
-            this.renderJumpCharge(ctx);
-        }
-        
-        ctx.restore();
     }
     
     // 점프 차징 표시
