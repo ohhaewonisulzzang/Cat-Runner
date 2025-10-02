@@ -17,10 +17,13 @@ class GameStateManager {
             score: 0,
             highScore: this.loadHighScore(),
             obstaclesPassed: 0,
-            gameSpeed: 7,
+            gameSpeed: 6, // 적당한 시작 속도
             difficultyLevel: 1,
+            gameTime: 0, // 게임 플레이 시간 (초)
             soundEnabled: this.loadSetting('soundEnabled', true),
-            sfxEnabled: this.loadSetting('sfxEnabled', true)
+            sfxEnabled: this.loadSetting('sfxEnabled', true),
+            isLavaMap: false, // 용암 맵 여부
+            mapTransitioning: false // 맵 전환 중인지
         };
         
         // 상태 변경 콜백들
@@ -58,18 +61,44 @@ class GameStateManager {
     
     // 게임 데이터 업데이트
     updateScore(points) {
+        const prevScore = this.gameData.score;
         this.gameData.score += points;
         this.updateScoreDisplay();
-        
+
+        // 1000점 돌파 시 용암 맵으로 전환
+        if (prevScore < 1000 && this.gameData.score >= 1000 && !this.gameData.isLavaMap) {
+            this.triggerLavaMapTransition();
+        }
+
         // 최고 점수 확인 및 업데이트
         if (this.gameData.score > this.gameData.highScore) {
             this.gameData.highScore = this.gameData.score;
             this.saveHighScore();
             this.showNewRecord();
         }
-        
+
         // 난이도 조정
         this.updateDifficulty();
+    }
+
+    // 용암 맵 전환 트리거
+    triggerLavaMapTransition() {
+        this.gameData.mapTransitioning = true;
+
+        // 화면 전환 콜백 실행 (gameEngine에서 처리)
+        if (this.mapTransitionCallback) {
+            this.mapTransitionCallback();
+        }
+
+        setTimeout(() => {
+            this.gameData.isLavaMap = true;
+            this.gameData.mapTransitioning = false;
+        }, 1000); // 1초 후 용암 맵으로 전환
+    }
+
+    // 맵 전환 콜백 등록
+    onMapTransition(callback) {
+        this.mapTransitionCallback = callback;
     }
     
     // 장애물 통과 수 증가
@@ -77,22 +106,42 @@ class GameStateManager {
         this.gameData.obstaclesPassed++;
     }
     
-    // 난이도 업데이트
+    // 난이도 업데이트 (점진적 증가 시스템 - 균형있게)
     updateDifficulty() {
         const score = this.gameData.score;
-        
-        if (score >= 1000) {
-            this.gameData.difficultyLevel = 4;
-            this.gameData.gameSpeed = 12;
+        const gameTime = this.gameData.gameTime;
+
+        // 시간 기반 레벨 증가 (30초마다 레벨 +1)
+        const timeLevelBonus = Math.floor(gameTime / 30);
+
+        // 점수 기반 추가 레벨
+        let scoreLevel = 0;
+        if (score >= 3000) {
+            scoreLevel = 4;
+        } else if (score >= 2000) {
+            scoreLevel = 3;
+        } else if (score >= 1000) {
+            scoreLevel = 2;
         } else if (score >= 500) {
-            this.gameData.difficultyLevel = 3;
-            this.gameData.gameSpeed = 10;
-        } else if (score >= 200) {
-            this.gameData.difficultyLevel = 2;
-            this.gameData.gameSpeed = 8;
-        } else {
-            this.gameData.difficultyLevel = 1;
-            this.gameData.gameSpeed = 7;
+            scoreLevel = 1;
+        }
+
+        // 최종 난이도 레벨 (최대 10)
+        this.gameData.difficultyLevel = Math.min(1 + timeLevelBonus + scoreLevel, 10);
+
+        // 속도 점진적 증가 (기본 6에서 시작, 적절하게 증가)
+        const baseSpeed = 6;
+        const timeSpeedBonus = Math.floor(gameTime / 15) * 0.5; // 15초마다 0.5 증가
+        const scoreSpeedBonus = scoreLevel * 0.8;
+
+        this.gameData.gameSpeed = Math.min(baseSpeed + timeSpeedBonus + scoreSpeedBonus, 20); // 최대 속도 20
+    }
+    
+    // 게임 시간 업데이트
+    updateGameTime(deltaTime) {
+        if (this.isState('playing')) {
+            this.gameData.gameTime += deltaTime / 1000; // 밀리초를 초로 변환
+            this.updateDifficulty(); // 시간이 업데이트될 때마다 난이도 재계산
         }
     }
     
@@ -100,8 +149,11 @@ class GameStateManager {
     resetGame() {
         this.gameData.score = 0;
         this.gameData.obstaclesPassed = 0;
-        this.gameData.gameSpeed = 7;
+        this.gameData.gameSpeed = 6; // 초기 속도로 리셋
         this.gameData.difficultyLevel = 1;
+        this.gameData.gameTime = 0; // 게임 시간도 리셋
+        this.gameData.isLavaMap = false; // 용암 맵 리셋
+        this.gameData.mapTransitioning = false;
         this.updateScoreDisplay();
     }
     
@@ -129,15 +181,19 @@ class GameStateManager {
             this.setState(this.states.MENU);
         });
         
-        document.getElementById('playAgainBtn').addEventListener('click', () => {
-            this.resetGame();
-            this.setState(this.states.PLAYING);
+        // 게임 오버 화면에서 클릭으로 재시작
+        document.getElementById('gameOverScreen').addEventListener('click', (e) => {
+            // 메인으로 버튼이 아닌 경우에만 재시작
+            if (e.target.id !== 'backToMenuBtn') {
+                this.resetGame();
+                this.setState(this.states.PLAYING);
+            }
         });
         
         document.getElementById('backToMenuBtn').addEventListener('click', () => {
             this.setState(this.states.MENU);
         });
-        
+
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
             this.setState(this.previousState || this.states.MENU);
         });

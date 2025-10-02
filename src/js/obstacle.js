@@ -211,95 +211,131 @@ class ObstacleManager {
     constructor(gameState) {
         this.gameState = gameState;
         this.obstacles = [];
-        this.lastObstacleX = 1280; // 화면 우측 끝
+        this.spawnTimer = 0; // 생성 타이머
+        this.spawnInterval = 1000; // 초기 생성 간격 (ms)
         this.lastObstacleType = null;
         this.consecutiveCount = 0;
-        
-        // 생성 규칙
-        this.minDistance = 800;
-        this.maxDistance = 2500;
         this.groundRatio = 0.6; // 60% 지면, 40% 공중
+
+        console.log('ObstacleManager 초기화 완료');
     }
-    
+
     // 업데이트
     update(deltaTime) {
         if (!this.gameState.isState('playing')) return;
-        
+
         const gameSpeed = this.gameState.gameData.gameSpeed;
-        
+
         // 기존 장애물 업데이트
-        this.obstacles.forEach(obstacle => {
-            obstacle.update(gameSpeed, deltaTime);
-        });
-        
+        for (let i = 0; i < this.obstacles.length; i++) {
+            this.obstacles[i].update(gameSpeed, deltaTime);
+        }
+
         // 비활성화된 장애물 제거
+        const beforeCount = this.obstacles.length;
         this.obstacles = this.obstacles.filter(obstacle => obstacle.active);
-        
-        // 새 장애물 생성
-        this.generateObstacles();
-    }
-    
-    // 장애물 생성
-    generateObstacles() {
-        // 마지막 장애물과의 거리 확인
-        const screenWidth = 1280;
-        const shouldGenerate = this.lastObstacleX < screenWidth * 1.5;
-        
-        if (shouldGenerate) {
-            this.createObstacle();
+        const afterCount = this.obstacles.length;
+
+        if (beforeCount !== afterCount) {
+            console.log(`장애물 제거됨: ${beforeCount} -> ${afterCount}`);
+        }
+
+        // 타이머 기반 장애물 생성
+        this.spawnTimer += deltaTime;
+
+        // 난이도에 따라 생성 간격 조정
+        const difficulty = this.gameState.gameData.difficultyLevel;
+        this.spawnInterval = Math.max(400, 1200 - (difficulty * 80));
+
+        if (this.spawnTimer >= this.spawnInterval) {
+            this.spawnObstacle();
+            this.spawnTimer = 0;
+            console.log(`장애물 생성! 현재 개수: ${this.obstacles.length}, 난이도: ${difficulty}`);
         }
     }
-    
-    // 개별 장애물 생성
-    createObstacle() {
-        // 거리 계산
-        const distance = this.calculateDistance();
-        const x = this.lastObstacleX + distance;
-        
-        // 타입 결정 (연속 방지)
+
+    // 장애물 생성
+    spawnObstacle() {
+        // 화면 우측에서 생성
+        const x = 1280 + 100; // 화면 밖 100px
+
+        // 타입 결정
         const type = this.determineType();
-        
-        // 크기 결정 (난이도 기반)
+
+        // 크기 결정
         const size = this.determineSize();
-        
+
         // Y 위치 결정
-        const y = type === 'ground' ? 620 : 400; // 지면: 620, 공중: 크기별로 조정됨
-        
+        const y = type === 'ground' ? 620 : 400;
+
         // 장애물 생성
         const obstacle = new Obstacle(x, y, type, size);
         this.obstacles.push(obstacle);
-        
-        // 상태 업데이트
-        this.lastObstacleX = x;
+
         this.updateConsecutiveCount(type);
     }
     
-    // 거리 계산
+    // 거리 계산 (점진적 난이도 증가)
     calculateDistance() {
         const difficulty = this.gameState.gameData.difficultyLevel;
-        let minDist = this.minDistance;
-        let maxDist = this.maxDistance;
-        
-        // 난이도별 거리 조정 (더 어렵게)
+        const gameTime = this.gameState.gameData.gameTime;
+
+        // 기본 거리 설정 (적당한 난이도로 시작)
+        let minDist, maxDist;
+
+        // 난이도별 기본 거리
         switch (difficulty) {
-            case 1: // 0~200점
-                minDist = 400;
-                maxDist = 600;
-                break;
-            case 2: // 200~500점
-                minDist = 350;
-                maxDist = 550;
-                break;
-            case 3: // 500~1000점
+            case 1: // 처음 (쉬움)
                 minDist = 300;
-                maxDist = 500;
-                break;
-            case 4: // 1000점+
-                minDist = 250;
                 maxDist = 450;
                 break;
+            case 2: // 약간 쉬움
+                minDist = 250;
+                maxDist = 400;
+                break;
+            case 3: // 보통
+                minDist = 220;
+                maxDist = 350;
+                break;
+            case 4: // 약간 어려움
+                minDist = 180;
+                maxDist = 300;
+                break;
+            case 5: // 어려움
+                minDist = 150;
+                maxDist = 250;
+                break;
+            case 6: // 매우 어려움
+                minDist = 120;
+                maxDist = 200;
+                break;
+            case 7: // 극도로 어려움
+                minDist = 100;
+                maxDist = 170;
+                break;
+            case 8: // 최고 난이도
+                minDist = 80;
+                maxDist = 140;
+                break;
+            case 9: // 극한 난이도
+                minDist = 70;
+                maxDist = 110;
+                break;
+            case 10: // 악몽 난이도
+                minDist = 60;
+                maxDist = 90;
+                break;
+            default:
+                minDist = 300;
+                maxDist = 450;
         }
-        
+
+        // 시간 기반 점진적 감소
+        // 30초마다 12% 감소, 최대 48% 감소
+        const timeReduction = Math.min(gameTime / 30, 4) * 0.12;
+        minDist = Math.max(minDist * (1 - timeReduction), minDist * 0.5);
+        maxDist = Math.max(maxDist * (1 - timeReduction), maxDist * 0.5);
+
         return Math.random() * (maxDist - minDist) + minDist;
     }
     
@@ -314,24 +350,69 @@ class ObstacleManager {
         return Math.random() < this.groundRatio ? 'ground' : 'air';
     }
     
-    // 크기 결정
+    // 크기 결정 (점진적 난이도 증가)
     determineSize() {
         const difficulty = this.gameState.gameData.difficultyLevel;
+        const gameTime = this.gameState.gameData.gameTime;
         const rand = Math.random();
-        
-        // 난이도별 큰 장애물 확률 (더 어렵게)
-        let largeProbability;
+
+        // 기본 큰 장애물 확률
+        let largeProbability, mediumProbability;
+
         switch (difficulty) {
-            case 1: largeProbability = 0.3; break;
-            case 2: largeProbability = 0.45; break;
-            case 3: largeProbability = 0.6; break;
-            case 4: largeProbability = 0.75; break;
-            default: largeProbability = 0.3;
+            case 1: // 처음 (작은 장애물 위주)
+                largeProbability = 0.0;
+                mediumProbability = 0.15;
+                break;
+            case 2: // 쉬움
+                largeProbability = 0.05;
+                mediumProbability = 0.2;
+                break;
+            case 3: // 보통
+                largeProbability = 0.1;
+                mediumProbability = 0.25;
+                break;
+            case 4: // 약간 어려움
+                largeProbability = 0.15;
+                mediumProbability = 0.3;
+                break;
+            case 5: // 어려움
+                largeProbability = 0.25;
+                mediumProbability = 0.3;
+                break;
+            case 6: // 매우 어려움
+                largeProbability = 0.35;
+                mediumProbability = 0.3;
+                break;
+            case 7: // 극도로 어려움
+                largeProbability = 0.45;
+                mediumProbability = 0.3;
+                break;
+            case 8: // 최고 난이도
+                largeProbability = 0.55;
+                mediumProbability = 0.3;
+                break;
+            case 9: // 극한 난이도
+                largeProbability = 0.7;
+                mediumProbability = 0.2;
+                break;
+            case 10: // 악몽 난이도
+                largeProbability = 0.85;
+                mediumProbability = 0.1;
+                break;
+            default:
+                largeProbability = 0.0;
+                mediumProbability = 0.15;
         }
-        
+
+        // 시간 기반 점진적 증가
+        // 20초마다 6% 증가, 최대 30%
+        const timeBonus = Math.min(gameTime / 20, 5) * 0.06;
+        largeProbability = Math.min(largeProbability + timeBonus, 0.9);
+
         if (rand < largeProbability) {
             return 'large';
-        } else if (rand < largeProbability + 0.3) {
+        } else if (rand < largeProbability + mediumProbability) {
             return 'medium';
         } else {
             return 'small';
@@ -398,9 +479,10 @@ class ObstacleManager {
     // 리셋
     reset() {
         this.obstacles = [];
-        this.lastObstacleX = 1280;
+        this.spawnTimer = 0;
         this.lastObstacleType = null;
         this.consecutiveCount = 0;
+        console.log('ObstacleManager 리셋 완료');
     }
     
     // 디버그 정보
@@ -408,7 +490,8 @@ class ObstacleManager {
         return {
             obstacleCount: this.obstacles.length,
             activeObstacles: this.obstacles.filter(o => o.active).length,
-            lastObstacleDistance: this.lastObstacleX - 1280,
+            spawnTimer: Math.round(this.spawnTimer),
+            spawnInterval: this.spawnInterval,
             consecutiveType: `${this.lastObstacleType} x${this.consecutiveCount}`
         };
     }

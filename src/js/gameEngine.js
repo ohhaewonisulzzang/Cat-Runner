@@ -28,10 +28,13 @@ class GameEngine {
         // 스코어 타이머
         this.scoreTimer = 0;
         this.scoreInterval = 100; // 0.1초마다 1점
-        
+
+        // 맵 전환 효과
+        this.transitionAlpha = 0;
+
         // 디버그 모드
-        this.debugMode = false;
-        
+        this.debugMode = true; // 디버그 모드 자동 활성화
+
         // 상태 변경 콜백 등록
         this.setupStateCallbacks();
         
@@ -62,18 +65,44 @@ class GameEngine {
         this.gameState.onStateChange('playing', () => {
             this.startGame();
         });
-        
+
         this.gameState.onStateChange('paused', () => {
             // 게임 일시정지 시 처리
         });
-        
+
         this.gameState.onStateChange('gameOver', () => {
             this.endGame();
         });
-        
+
         this.gameState.onStateChange('menu', () => {
             this.resetGame();
         });
+
+        // 맵 전환 콜백 등록
+        this.gameState.onMapTransition(() => {
+            this.startMapTransition();
+        });
+    }
+
+    // 맵 전환 시작
+    startMapTransition() {
+        this.transitionAlpha = 0;
+        const transitionInterval = setInterval(() => {
+            this.transitionAlpha += 0.05;
+            if (this.transitionAlpha >= 1) {
+                clearInterval(transitionInterval);
+                // 어두워진 후 다시 밝아지기
+                setTimeout(() => {
+                    const fadeInInterval = setInterval(() => {
+                        this.transitionAlpha -= 0.05;
+                        if (this.transitionAlpha <= 0) {
+                            clearInterval(fadeInInterval);
+                            this.transitionAlpha = 0;
+                        }
+                    }, 30);
+                }, 200);
+            }
+        }, 30);
     }
     
     // 캔버스 크기 조정
@@ -154,6 +183,9 @@ class GameEngine {
     // 업데이트
     update(deltaTime) {
         if (this.gameState.isState('playing')) {
+            // 게임 시간 업데이트 (난이도 자동 조정)
+            this.gameState.updateGameTime(deltaTime);
+            
             // 플레이어 업데이트
             this.player.update(deltaTime);
             
@@ -226,25 +258,74 @@ class GameEngine {
     
     // 배경 렌더링
     renderBackground() {
+        if (this.gameState.gameData.isLavaMap) {
+            this.renderLavaBackground();
+        } else {
+            this.renderNormalBackground();
+        }
+
+        // 전환 효과 오버레이
+        if (this.transitionAlpha > 0) {
+            this.ctx.fillStyle = `rgba(0, 0, 0, ${this.transitionAlpha})`;
+            this.ctx.fillRect(0, 0, 1280, 720);
+        }
+    }
+
+    // 일반 배경 렌더링
+    renderNormalBackground() {
         // 하늘 그라데이션
         const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
         gradient.addColorStop(0, '#87CEEB');
         gradient.addColorStop(0.6, '#87CEEB');
         gradient.addColorStop(0.6, '#90EE90');
         gradient.addColorStop(1, '#8FBC8F');
-        
+
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, 1280, 720);
-        
+
         // 구름 (선택사항)
         this.renderClouds();
-        
+
         // 지면 패턴
         this.renderGround();
-        
+
         // 지평선
         this.ctx.strokeStyle = '#228B22';
         this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 670);
+        this.ctx.lineTo(1280, 670);
+        this.ctx.stroke();
+    }
+
+    // 용암 배경 렌더링
+    renderLavaBackground() {
+        // 용암 하늘 그라데이션
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
+        gradient.addColorStop(0, '#1a0000');
+        gradient.addColorStop(0.6, '#4a0000');
+        gradient.addColorStop(0.6, '#8B0000');
+        gradient.addColorStop(1, '#FF4500');
+
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, 1280, 720);
+
+        // 용암 지면
+        this.ctx.fillStyle = '#8B0000';
+        this.ctx.fillRect(0, 670, 1280, 50);
+
+        // 용암 효과 (움직이는 용암)
+        this.ctx.fillStyle = '#FF4500';
+        for (let i = 0; i < 1280; i += 30) {
+            const lavaX = (i + this.groundX * 2) % 1280;
+            if (lavaX > -30) {
+                this.ctx.fillRect(lavaX, 670 + Math.sin((lavaX + this.groundX) * 0.1) * 5, 25, 10);
+            }
+        }
+
+        // 용암 지평선
+        this.ctx.strokeStyle = '#FF0000';
+        this.ctx.lineWidth = 3;
         this.ctx.beginPath();
         this.ctx.moveTo(0, 670);
         this.ctx.lineTo(1280, 670);
@@ -287,12 +368,15 @@ class GameEngine {
         // 지면 기본 색상
         this.ctx.fillStyle = '#228B22';
         this.ctx.fillRect(0, 670, 1280, 50);
-        
-        // 지면 패턴 (풀)
+
+        // 지면 패턴 (풀) - 연속적으로 렌더링
         this.ctx.fillStyle = '#32CD32';
-        for (let i = 0; i < 1280; i += 20) {
-            const grassX = (i + this.groundX) % 1280;
-            if (grassX > -20) {
+        const patternWidth = 20;
+        const startX = Math.floor(this.groundX / patternWidth) * patternWidth;
+
+        for (let i = startX; i < startX + 1280 + patternWidth; i += patternWidth) {
+            const grassX = i - this.groundX;
+            if (grassX >= -patternWidth && grassX <= 1280) {
                 // 풀 그리기
                 this.ctx.fillRect(grassX, 670, 2, 8);
                 this.ctx.fillRect(grassX + 5, 670, 2, 6);
@@ -310,12 +394,14 @@ class GameEngine {
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px monospace';
         
+        const obsDebug = this.obstacleManager.getDebugInfo();
         const debugInfo = [
             `FPS: ${Math.round(1000 / (this.lastTime - (this.lastTime - 16)))}`,
             `State: ${this.gameState.currentState}`,
             `Score: ${this.gameState.gameData.score}`,
-            `Speed: ${this.gameState.gameData.gameSpeed}`,
+            `Speed: ${this.gameState.gameData.gameSpeed.toFixed(1)}`,
             `Difficulty: ${this.gameState.gameData.difficultyLevel}`,
+            `Game Time: ${this.gameState.gameData.gameTime.toFixed(1)}s`,
             '',
             'Player:',
             `  ${this.player.getDebugInfo().position}`,
@@ -323,8 +409,10 @@ class GameEngine {
             `  Grounded: ${this.player.getDebugInfo().grounded}`,
             '',
             'Obstacles:',
-            `  Count: ${this.obstacleManager.getDebugInfo().obstacleCount}`,
-            `  Active: ${this.obstacleManager.getDebugInfo().activeObstacles}`
+            `  Count: ${obsDebug.obstacleCount}`,
+            `  Active: ${obsDebug.activeObstacles}`,
+            `  Timer: ${obsDebug.spawnTimer}ms`,
+            `  Interval: ${obsDebug.spawnInterval}ms`
         ];
         
         debugInfo.forEach((line, index) => {
