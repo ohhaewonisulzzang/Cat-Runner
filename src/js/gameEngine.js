@@ -35,6 +35,10 @@ class GameEngine {
         // 디버그 모드
         this.debugMode = true; // 디버그 모드 자동 활성화
 
+        // 테스트 모드
+        this.testMode = false;
+        this.invincible = false;
+
         // 상태 변경 콜백 등록
         this.setupStateCallbacks();
         
@@ -53,6 +57,28 @@ class GameEngine {
             if (e.code === 'F12') {
                 e.preventDefault();
                 this.debugMode = !this.debugMode;
+            }
+
+            // 테스트 모드 토글 (` 키)
+            if (e.code === 'Backquote') {
+                e.preventDefault();
+                this.testMode = !this.testMode;
+                if (!this.testMode) {
+                    this.invincible = false; // 테스트 모드 해제 시 무적 상태도 해제
+                }
+            }
+
+            // 테스트 모드 기능들
+            if (this.testMode) {
+                // 숫자 1: 점수 100점 추가
+                if (e.code === 'Digit1') {
+                    this.gameState.updateScore(100);
+                }
+
+                // 숫자 2: 무적 모드 토글
+                if (e.code === 'Digit2') {
+                    this.invincible = !this.invincible;
+                }
             }
         });
         
@@ -192,8 +218,8 @@ class GameEngine {
             // 장애물 관리자 업데이트
             this.obstacleManager.update(deltaTime);
             
-            // 충돌 검사
-            if (this.obstacleManager.checkCollisions(this.player)) {
+            // 충돌 검사 (무적 모드가 아닐 때만)
+            if (!this.invincible && this.obstacleManager.checkCollisions(this.player)) {
                 this.gameState.setState('gameOver');
                 return;
             }
@@ -254,12 +280,21 @@ class GameEngine {
         if (this.debugMode) {
             this.renderDebugInfo();
         }
+
+        // 테스트 모드 라벨 렌더링
+        if (this.testMode) {
+            this.renderTestModeLabel();
+        }
     }
     
     // 배경 렌더링
     renderBackground() {
-        if (this.gameState.gameData.isLavaMap) {
+        const currentMap = this.gameState.gameData.currentMap;
+
+        if (currentMap === 'lava') {
             this.renderLavaBackground();
+        } else if (currentMap === 'ice') {
+            this.renderIceBackground();
         } else {
             this.renderNormalBackground();
         }
@@ -283,8 +318,11 @@ class GameEngine {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, 1280, 720);
 
-        // 구름 (선택사항)
+        // 구름 데코레이션
         this.renderClouds();
+
+        // 나무 데코레이션
+        this.renderTrees();
 
         // 지면 패턴
         this.renderGround();
@@ -310,6 +348,12 @@ class GameEngine {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, 1280, 720);
 
+        // 화산 데코레이션
+        this.renderVolcanoes();
+
+        // 용암 방울 데코레이션
+        this.renderLavaBubbles();
+
         // 용암 지면
         this.ctx.fillStyle = '#8B0000';
         this.ctx.fillRect(0, 670, 1280, 50);
@@ -326,6 +370,51 @@ class GameEngine {
         // 용암 지평선
         this.ctx.strokeStyle = '#FF0000';
         this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 670);
+        this.ctx.lineTo(1280, 670);
+        this.ctx.stroke();
+    }
+
+    // 빙하 배경 렌더링
+    renderIceBackground() {
+        // 빙하 하늘 그라데이션
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(0.5, '#16213e');
+        gradient.addColorStop(0.7, '#0f3460');
+        gradient.addColorStop(1, '#53a8b6');
+
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, 1280, 720);
+
+        // 눈 내리는 효과
+        this.renderSnowfall();
+
+        // 빙산 데코레이션
+        this.renderIcebergs();
+
+        // 오로라 효과
+        this.renderAurora();
+
+        // 얼음 지면
+        this.ctx.fillStyle = '#b8e4f0';
+        this.ctx.fillRect(0, 670, 1280, 50);
+
+        // 얼음 반짝이는 효과
+        this.ctx.fillStyle = '#d4f1f9';
+        for (let i = 0; i < 1280; i += 40) {
+            const iceX = (i + this.groundX) % 1280;
+            if (iceX > -40) {
+                const sparkleY = 670 + Math.sin((iceX + this.groundX) * 0.05) * 3;
+                this.ctx.fillRect(iceX, sparkleY, 8, 3);
+                this.ctx.fillRect(iceX + 15, sparkleY + 5, 5, 2);
+            }
+        }
+
+        // 빙하 지평선
+        this.ctx.strokeStyle = '#89cff0';
+        this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(0, 670);
         this.ctx.lineTo(1280, 670);
@@ -385,6 +474,181 @@ class GameEngine {
             }
         }
     }
+
+    // 나무 데코레이션 (일반 맵)
+    renderTrees() {
+        const treePositions = [
+            { x: 150 + this.backgroundX * 0.5, y: 620 },
+            { x: 400 + this.backgroundX * 0.5, y: 610 },
+            { x: 700 + this.backgroundX * 0.5, y: 625 },
+            { x: 950 + this.backgroundX * 0.5, y: 615 },
+            { x: 1350 + this.backgroundX * 0.5, y: 620 }
+        ];
+
+        treePositions.forEach(tree => {
+            // 나무 줄기
+            this.ctx.fillStyle = '#8B4513';
+            this.ctx.fillRect(tree.x - 5, tree.y, 10, 50);
+
+            // 나무 잎 (삼각형)
+            this.ctx.fillStyle = '#228B22';
+            this.ctx.beginPath();
+            this.ctx.moveTo(tree.x, tree.y - 30);
+            this.ctx.lineTo(tree.x - 20, tree.y);
+            this.ctx.lineTo(tree.x + 20, tree.y);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(tree.x, tree.y - 20);
+            this.ctx.lineTo(tree.x - 15, tree.y + 5);
+            this.ctx.lineTo(tree.x + 15, tree.y + 5);
+            this.ctx.closePath();
+            this.ctx.fill();
+        });
+    }
+
+    // 화산 데코레이션 (용암 맵)
+    renderVolcanoes() {
+        const volcanoPositions = [
+            { x: 250 + this.backgroundX * 0.4, y: 670 },
+            { x: 650 + this.backgroundX * 0.4, y: 670 },
+            { x: 1050 + this.backgroundX * 0.4, y: 670 },
+            { x: 1450 + this.backgroundX * 0.4, y: 670 }
+        ];
+
+        volcanoPositions.forEach(volcano => {
+            // 화산 몸체
+            this.ctx.fillStyle = '#4a0000';
+            this.ctx.beginPath();
+            this.ctx.moveTo(volcano.x, volcano.y - 80);
+            this.ctx.lineTo(volcano.x - 50, volcano.y);
+            this.ctx.lineTo(volcano.x + 50, volcano.y);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            // 화산 분화구
+            this.ctx.fillStyle = '#8B0000';
+            this.ctx.beginPath();
+            this.ctx.moveTo(volcano.x - 15, volcano.y - 80);
+            this.ctx.lineTo(volcano.x - 20, volcano.y - 70);
+            this.ctx.lineTo(volcano.x + 20, volcano.y - 70);
+            this.ctx.lineTo(volcano.x + 15, volcano.y - 80);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            // 용암 빛
+            this.ctx.fillStyle = '#FF4500';
+            this.ctx.fillRect(volcano.x - 10, volcano.y - 75, 20, 5);
+        });
+    }
+
+    // 용암 방울 데코레이션 (용암 맵)
+    renderLavaBubbles() {
+        const time = Date.now() * 0.001;
+        const bubblePositions = [
+            { x: 100, y: 300, speed: 1 },
+            { x: 300, y: 400, speed: 1.5 },
+            { x: 600, y: 250, speed: 0.8 },
+            { x: 900, y: 350, speed: 1.2 },
+            { x: 1100, y: 280, speed: 1.1 }
+        ];
+
+        bubblePositions.forEach(bubble => {
+            const offsetY = Math.sin(time * bubble.speed) * 20;
+
+            this.ctx.fillStyle = 'rgba(255, 69, 0, 0.3)';
+            this.ctx.beginPath();
+            this.ctx.arc(bubble.x, bubble.y + offsetY, 8, 0, Math.PI * 2);
+            this.ctx.fill();
+
+            this.ctx.fillStyle = 'rgba(255, 140, 0, 0.2)';
+            this.ctx.beginPath();
+            this.ctx.arc(bubble.x, bubble.y + offsetY, 12, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+    }
+
+    // 눈 내리는 효과 (빙하 맵)
+    renderSnowfall() {
+        const time = Date.now() * 0.001;
+        const snowflakes = [];
+
+        for (let i = 0; i < 50; i++) {
+            const x = (i * 30 + time * 20) % 1280;
+            const y = ((i * 50 + time * 30) % 670);
+
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 2, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+    }
+
+    // 빙산 데코레이션 (빙하 맵)
+    renderIcebergs() {
+        const icebergPositions = [
+            { x: 200 + this.backgroundX * 0.5, y: 670 },
+            { x: 500 + this.backgroundX * 0.5, y: 670 },
+            { x: 800 + this.backgroundX * 0.5, y: 670 },
+            { x: 1100 + this.backgroundX * 0.5, y: 670 },
+            { x: 1400 + this.backgroundX * 0.5, y: 670 }
+        ];
+
+        icebergPositions.forEach(iceberg => {
+            // 빙산 몸체
+            this.ctx.fillStyle = '#b8e4f0';
+            this.ctx.beginPath();
+            this.ctx.moveTo(iceberg.x, iceberg.y - 60);
+            this.ctx.lineTo(iceberg.x - 40, iceberg.y);
+            this.ctx.lineTo(iceberg.x + 40, iceberg.y);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            // 빙산 하이라이트
+            this.ctx.fillStyle = '#d4f1f9';
+            this.ctx.beginPath();
+            this.ctx.moveTo(iceberg.x, iceberg.y - 60);
+            this.ctx.lineTo(iceberg.x - 20, iceberg.y - 30);
+            this.ctx.lineTo(iceberg.x, iceberg.y);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            // 빙산 그림자
+            this.ctx.fillStyle = '#89cff0';
+            this.ctx.beginPath();
+            this.ctx.moveTo(iceberg.x, iceberg.y);
+            this.ctx.lineTo(iceberg.x + 20, iceberg.y - 30);
+            this.ctx.lineTo(iceberg.x + 40, iceberg.y);
+            this.ctx.closePath();
+            this.ctx.fill();
+        });
+    }
+
+    // 오로라 효과 (빙하 맵)
+    renderAurora() {
+        const time = Date.now() * 0.0005;
+
+        // 오로라 레이어 1
+        const gradient1 = this.ctx.createLinearGradient(0, 100, 1280, 200);
+        gradient1.addColorStop(0, 'rgba(0, 255, 150, 0)');
+        gradient1.addColorStop(0.3 + Math.sin(time) * 0.1, 'rgba(0, 255, 150, 0.15)');
+        gradient1.addColorStop(0.7 + Math.cos(time * 1.3) * 0.1, 'rgba(100, 200, 255, 0.15)');
+        gradient1.addColorStop(1, 'rgba(100, 200, 255, 0)');
+
+        this.ctx.fillStyle = gradient1;
+        this.ctx.fillRect(0, 100, 1280, 150);
+
+        // 오로라 레이어 2
+        const gradient2 = this.ctx.createLinearGradient(0, 150, 1280, 300);
+        gradient2.addColorStop(0, 'rgba(150, 0, 255, 0)');
+        gradient2.addColorStop(0.4 + Math.cos(time * 0.8) * 0.1, 'rgba(150, 0, 255, 0.1)');
+        gradient2.addColorStop(0.8 + Math.sin(time * 1.5) * 0.1, 'rgba(200, 100, 255, 0.1)');
+        gradient2.addColorStop(1, 'rgba(200, 100, 255, 0)');
+
+        this.ctx.fillStyle = gradient2;
+        this.ctx.fillRect(0, 150, 1280, 200);
+    }
     
     // 디버그 정보 렌더링
     renderDebugInfo() {
@@ -420,6 +684,27 @@ class GameEngine {
         });
     }
     
+    // 테스트 모드 라벨 렌더링
+    renderTestModeLabel() {
+        // 배경 박스
+        this.ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
+        this.ctx.fillRect(1080, 10, 190, 80);
+
+        // 테두리
+        this.ctx.strokeStyle = '#FF8C00';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(1080, 10, 190, 80);
+
+        // 텍스트
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = 'bold 18px Arial';
+        this.ctx.fillText('TEST MODE', 1100, 35);
+
+        this.ctx.font = '14px Arial';
+        this.ctx.fillText('1: +100 Score', 1095, 58);
+        this.ctx.fillText(`2: Invincible ${this.invincible ? 'ON' : 'OFF'}`, 1095, 78);
+    }
+
     // 게임 통계 반환
     getGameStats() {
         return {

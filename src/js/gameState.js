@@ -22,7 +22,7 @@ class GameStateManager {
             gameTime: 0, // 게임 플레이 시간 (초)
             soundEnabled: this.loadSetting('soundEnabled', true),
             sfxEnabled: this.loadSetting('sfxEnabled', true),
-            isLavaMap: false, // 용암 맵 여부
+            currentMap: 'normal', // normal, lava, ice
             mapTransitioning: false // 맵 전환 중인지
         };
         
@@ -66,8 +66,13 @@ class GameStateManager {
         this.updateScoreDisplay();
 
         // 1000점 돌파 시 용암 맵으로 전환
-        if (prevScore < 1000 && this.gameData.score >= 1000 && !this.gameData.isLavaMap) {
-            this.triggerLavaMapTransition();
+        if (prevScore < 1000 && this.gameData.score >= 1000 && this.gameData.currentMap === 'normal') {
+            this.triggerMapTransition('lava');
+        }
+
+        // 2000점 돌파 시 빙하 맵으로 전환
+        if (prevScore < 2000 && this.gameData.score >= 2000 && this.gameData.currentMap === 'lava') {
+            this.triggerMapTransition('ice');
         }
 
         // 최고 점수 확인 및 업데이트
@@ -81,8 +86,8 @@ class GameStateManager {
         this.updateDifficulty();
     }
 
-    // 용암 맵 전환 트리거
-    triggerLavaMapTransition() {
+    // 맵 전환 트리거
+    triggerMapTransition(newMap) {
         this.gameData.mapTransitioning = true;
 
         // 화면 전환 콜백 실행 (gameEngine에서 처리)
@@ -91,9 +96,9 @@ class GameStateManager {
         }
 
         setTimeout(() => {
-            this.gameData.isLavaMap = true;
+            this.gameData.currentMap = newMap;
             this.gameData.mapTransitioning = false;
-        }, 1000); // 1초 후 용암 맵으로 전환
+        }, 1000); // 1초 후 새 맵으로 전환
     }
 
     // 맵 전환 콜백 등록
@@ -152,7 +157,7 @@ class GameStateManager {
         this.gameData.gameSpeed = 6; // 초기 속도로 리셋
         this.gameData.difficultyLevel = 1;
         this.gameData.gameTime = 0; // 게임 시간도 리셋
-        this.gameData.isLavaMap = false; // 용암 맵 리셋
+        this.gameData.currentMap = 'normal'; // 일반 맵으로 리셋
         this.gameData.mapTransitioning = false;
         this.updateScoreDisplay();
     }
