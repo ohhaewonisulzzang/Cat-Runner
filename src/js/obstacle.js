@@ -42,13 +42,13 @@ class Obstacle {
         if (this.type === 'air') {
             switch (this.size) {
                 case 'small':
-                    this.y = 200; // 낮은 높이
+                    this.y = 480; // 점프로 닿을 수 있는 높이
                     break;
                 case 'medium':
-                    this.y = 150; // 중간 높이
+                    this.y = 420; // 중간 점프 높이
                     break;
                 case 'large':
-                    this.y = 100; // 높은 위치
+                    this.y = 380; // 높은 점프 필요
                     break;
             }
         }
@@ -243,7 +243,7 @@ class ObstacleManager {
     generateObstacles() {
         // 마지막 장애물과의 거리 확인
         const screenWidth = 1280;
-        const shouldGenerate = this.lastObstacleX < screenWidth + 800;
+        const shouldGenerate = this.lastObstacleX < screenWidth * 1.5;
         
         if (shouldGenerate) {
             this.createObstacle();
@@ -263,7 +263,7 @@ class ObstacleManager {
         const size = this.determineSize();
         
         // Y 위치 결정
-        const y = type === 'ground' ? 620 : 100; // 지면: 620, 공중: 크기별로 조정됨
+        const y = type === 'ground' ? 620 : 400; // 지면: 620, 공중: 크기별로 조정됨
         
         // 장애물 생성
         const obstacle = new Obstacle(x, y, type, size);
@@ -280,23 +280,23 @@ class ObstacleManager {
         let minDist = this.minDistance;
         let maxDist = this.maxDistance;
         
-        // 난이도별 거리 조정
+        // 난이도별 거리 조정 (더 어렵게)
         switch (difficulty) {
             case 1: // 0~200점
-                minDist = 2000;
-                maxDist = 2500;
+                minDist = 400;
+                maxDist = 600;
                 break;
             case 2: // 200~500점
-                minDist = 1600;
-                maxDist = 2200;
+                minDist = 350;
+                maxDist = 550;
                 break;
             case 3: // 500~1000점
-                minDist = 1400;
-                maxDist = 2000;
+                minDist = 300;
+                maxDist = 500;
                 break;
             case 4: // 1000점+
-                minDist = 1200;
-                maxDist = 1800;
+                minDist = 250;
+                maxDist = 450;
                 break;
         }
         
@@ -319,14 +319,14 @@ class ObstacleManager {
         const difficulty = this.gameState.gameData.difficultyLevel;
         const rand = Math.random();
         
-        // 난이도별 큰 장애물 확률
+        // 난이도별 큰 장애물 확률 (더 어렵게)
         let largeProbability;
         switch (difficulty) {
-            case 1: largeProbability = 0.1; break;
-            case 2: largeProbability = 0.25; break;
-            case 3: largeProbability = 0.4; break;
-            case 4: largeProbability = 0.55; break;
-            default: largeProbability = 0.1;
+            case 1: largeProbability = 0.3; break;
+            case 2: largeProbability = 0.45; break;
+            case 3: largeProbability = 0.6; break;
+            case 4: largeProbability = 0.75; break;
+            default: largeProbability = 0.3;
         }
         
         if (rand < largeProbability) {

@@ -20,8 +20,8 @@ body {
     position: relative;
     width: 1280px;
     height: 720px;
-    max-width: 95vw;
-    max-height: 95vh;
+    max-width: 98vw;
+    max-height: 98vh;
     border: 3px solid #333;
     border-radius: 10px;
     overflow: hidden;
@@ -208,20 +208,28 @@ button:active {
     border-radius: 15px;
     font-size: 14px;
     pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    z-index: 5;
+}
+
+/* 게임 플레이 중에는 컨트롤 가이드 숨기기 */
+body.playing #controls {
+    opacity: 0;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 1400px) {
     #gameContainer {
-        width: 90vw;
-        height: 50.625vw; /* 16:9 비율 유지 */
+        width: 95vw;
+        height: 53.4375vw; /* 16:9 비율 유지 */
     }
 }
 
 @media (max-width: 800px) {
     #gameContainer {
-        width: 95vw;
-        height: 53.4375vw;
+        width: 98vw;
+        height: 55.125vw;
         border-width: 2px;
     }
     

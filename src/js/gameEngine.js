@@ -118,11 +118,14 @@ class GameEngine {
     
     // 게임 리셋
     resetGame() {
+        console.log('게임 리셋 중...');
         this.player.reset();
         this.obstacleManager.reset();
         this.backgroundX = 0;
         this.groundX = 0;
         this.scoreTimer = 0;
+        this.gameState.resetGame();
+        console.log('게임 리셋 완료');
     }
     
     // 메인 게임 루프

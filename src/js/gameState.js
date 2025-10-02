@@ -17,7 +17,7 @@ class GameStateManager {
             score: 0,
             highScore: this.loadHighScore(),
             obstaclesPassed: 0,
-            gameSpeed: 5,
+            gameSpeed: 7,
             difficultyLevel: 1,
             soundEnabled: this.loadSetting('soundEnabled', true),
             sfxEnabled: this.loadSetting('sfxEnabled', true)
@@ -83,16 +83,16 @@ class GameStateManager {
         
         if (score >= 1000) {
             this.gameData.difficultyLevel = 4;
-            this.gameData.gameSpeed = 8;
+            this.gameData.gameSpeed = 12;
         } else if (score >= 500) {
             this.gameData.difficultyLevel = 3;
-            this.gameData.gameSpeed = 7;
+            this.gameData.gameSpeed = 10;
         } else if (score >= 200) {
             this.gameData.difficultyLevel = 2;
-            this.gameData.gameSpeed = 6;
+            this.gameData.gameSpeed = 8;
         } else {
             this.gameData.difficultyLevel = 1;
-            this.gameData.gameSpeed = 5;
+            this.gameData.gameSpeed = 7;
         }
     }
     
@@ -100,7 +100,7 @@ class GameStateManager {
     resetGame() {
         this.gameData.score = 0;
         this.gameData.obstaclesPassed = 0;
-        this.gameData.gameSpeed = 5;
+        this.gameData.gameSpeed = 7;
         this.gameData.difficultyLevel = 1;
         this.updateScoreDisplay();
     }
@@ -163,6 +163,9 @@ class GameStateManager {
         document.querySelectorAll('.screen').forEach(screen => {
             screen.classList.remove('active');
         });
+        
+        // body 클래스 업데이트 (게임 플레이 중 컨트롤 가이드 숨기기용)
+        document.body.className = this.currentState;
         
         // 현재 상태에 맞는 화면 표시
         switch (this.currentState) {
