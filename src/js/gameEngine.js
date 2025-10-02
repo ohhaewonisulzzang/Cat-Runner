@@ -79,6 +79,13 @@ class GameEngine {
                 if (e.code === 'Digit2') {
                     this.invincible = !this.invincible;
                 }
+
+                // 숫자 3: 수분 게이지 10%로 설정
+                if (e.code === 'Digit3') {
+                    this.gameState.gameData.heatGauge = 10;
+                    this.gameState.updateHeatGaugeDisplay();
+                    console.log('수분 게이지를 10%로 설정했습니다.');
+                }
             }
         });
         
@@ -107,6 +114,11 @@ class GameEngine {
         // 맵 전환 콜백 등록
         this.gameState.onMapTransition(() => {
             this.startMapTransition();
+        });
+
+        // 더위 게임 오버 콜백 등록
+        this.gameState.onHeatGameOver(() => {
+            this.gameState.setState('gameOver');
         });
     }
 
@@ -223,7 +235,10 @@ class GameEngine {
                 this.gameState.setState('gameOver');
                 return;
             }
-            
+
+            // 물 아이템 획득 검사
+            this.obstacleManager.checkWaterCollection(this.player);
+
             // 통과한 장애물 확인
             this.obstacleManager.checkPassedObstacles(this.player.x);
             

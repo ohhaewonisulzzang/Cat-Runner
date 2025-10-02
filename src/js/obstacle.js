@@ -206,13 +206,90 @@ class Obstacle {
     }
 }
 
+// 물 아이템 클래스
+class WaterItem {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 40; // 장애물의 70% 크기
+        this.height = 40;
+        this.active = true;
+        this.collected = false;
+        this.animationFrame = 0;
+    }
+
+    update(gameSpeed, deltaTime) {
+        if (!this.active) return;
+
+        this.x -= gameSpeed;
+        this.animationFrame += 0.1;
+
+        // 화면을 벗어나면 비활성화
+        if (this.x + this.width < 0) {
+            this.active = false;
+        }
+    }
+
+    render(ctx) {
+        if (!this.active || this.collected) return;
+
+        ctx.save();
+
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+
+        // 반짝이는 효과
+        const glowRadius = this.width / 2 + Math.sin(this.animationFrame * 3) * 3;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, glowRadius);
+        gradient.addColorStop(0, 'rgba(100, 200, 255, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(100, 200, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 물병 본체
+        ctx.fillStyle = '#4FC3F7';
+        ctx.fillRect(this.x + 10, this.y + 8, 20, 24);
+
+        // 물병 뚜껑
+        ctx.fillStyle = '#0288D1';
+        ctx.fillRect(this.x + 12, this.y + 5, 16, 5);
+
+        // 물병 하이라이트
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillRect(this.x + 12, this.y + 10, 6, 15);
+
+        ctx.restore();
+    }
+
+    getBounds() {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    collect() {
+        this.collected = true;
+        this.active = false;
+    }
+}
+
 // 장애물 관리자 클래스
 class ObstacleManager {
     constructor(gameState) {
         this.gameState = gameState;
         this.obstacles = [];
+        this.waterItems = []; // 물 아이템 배열
         this.spawnTimer = 0; // 생성 타이머
         this.spawnInterval = 1000; // 초기 생성 간격 (ms)
+        this.waterSpawnTimer = 0; // 물 아이템 생성 타이머
+        this.waterSpawnInterval = 6000; // 5-8초 평균 (6초)
         this.lastObstacleType = null;
         this.consecutiveCount = 0;
         this.groundRatio = 0.6; // 60% 지면, 40% 공중
@@ -225,15 +302,24 @@ class ObstacleManager {
         if (!this.gameState.isState('playing')) return;
 
         const gameSpeed = this.gameState.gameData.gameSpeed;
+        const currentMap = this.gameState.gameData.currentMap;
 
         // 기존 장애물 업데이트
         for (let i = 0; i < this.obstacles.length; i++) {
             this.obstacles[i].update(gameSpeed, deltaTime);
         }
 
+        // 물 아이템 업데이트 (용암 맵에서만)
+        if (currentMap === 'lava') {
+            for (let i = 0; i < this.waterItems.length; i++) {
+                this.waterItems[i].update(gameSpeed, deltaTime);
+            }
+        }
+
         // 비활성화된 장애물 제거
         const beforeCount = this.obstacles.length;
         this.obstacles = this.obstacles.filter(obstacle => obstacle.active);
+        this.waterItems = this.waterItems.filter(item => item.active);
         const afterCount = this.obstacles.length;
 
         if (beforeCount !== afterCount) {
@@ -252,6 +338,32 @@ class ObstacleManager {
             this.spawnTimer = 0;
             console.log(`장애물 생성! 현재 개수: ${this.obstacles.length}, 난이도: ${difficulty}`);
         }
+
+        // 물 아이템 생성 (용암 맵에서만)
+        if (currentMap === 'lava') {
+            this.waterSpawnTimer += deltaTime;
+
+            // 5-8초마다 랜덤 생성
+            const randomInterval = 5000 + Math.random() * 3000;
+            if (this.waterSpawnTimer >= randomInterval) {
+                // 최대 2개까지만 화면에 존재
+                const activeWaterItems = this.waterItems.filter(item => item.active).length;
+                if (activeWaterItems < 2) {
+                    this.spawnWaterItem();
+                }
+                this.waterSpawnTimer = 0;
+            }
+        }
+    }
+
+    // 물 아이템 생성
+    spawnWaterItem() {
+        const x = 1280 + 100; // 화면 밖
+        const y = 400 + Math.random() * 200; // 랜덤 높이 (400-600)
+
+        const waterItem = new WaterItem(x, y);
+        this.waterItems.push(waterItem);
+        console.log(`물 아이템 생성! Y: ${y}`);
     }
 
     // 장애물 생성
@@ -432,18 +544,50 @@ class ObstacleManager {
     // 충돌 검사
     checkCollisions(player) {
         const playerBounds = player.getBounds();
-        
+
         for (const obstacle of this.obstacles) {
             if (!obstacle.active) continue;
-            
+
             const obstacleBounds = obstacle.getBounds();
-            
+
             if (this.isColliding(playerBounds, obstacleBounds)) {
                 return true;
             }
         }
-        
+
         return false;
+    }
+
+    // 물 아이템 획득 검사
+    checkWaterCollection(player) {
+        const playerBounds = player.getBounds();
+
+        for (const waterItem of this.waterItems) {
+            if (!waterItem.active || waterItem.collected) continue;
+
+            const itemBounds = waterItem.getBounds();
+
+            if (this.isColliding(playerBounds, itemBounds)) {
+                waterItem.collect();
+                this.gameState.recoverHeatGauge();
+                this.showWaterEffect();
+                console.log('물 아이템 획득! 게이지 +25%');
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // 물 아이템 획득 효과
+    showWaterEffect() {
+        const heatGauge = document.getElementById('heatGauge');
+        if (heatGauge) {
+            heatGauge.classList.add('recovered');
+            setTimeout(() => {
+                heatGauge.classList.remove('recovered');
+            }, 300);
+        }
     }
     
     // 충돌 판정
@@ -474,12 +618,19 @@ class ObstacleManager {
         this.obstacles.forEach(obstacle => {
             obstacle.render(ctx);
         });
+
+        // 물 아이템 렌더링
+        this.waterItems.forEach(waterItem => {
+            waterItem.render(ctx);
+        });
     }
     
     // 리셋
     reset() {
         this.obstacles = [];
+        this.waterItems = [];
         this.spawnTimer = 0;
+        this.waterSpawnTimer = 0;
         this.lastObstacleType = null;
         this.consecutiveCount = 0;
         console.log('ObstacleManager 리셋 완료');

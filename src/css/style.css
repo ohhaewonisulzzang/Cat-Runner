@@ -294,3 +294,102 @@ body.playing #controls {
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/* 더위 게이지 스타일 */
+.heat-gauge {
+    position: absolute;
+    top: 70px;
+    right: 40px;
+    width: 200px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease;
+}
+
+/* 용암 맵에서만 표시 */
+body.lava-map .heat-gauge {
+    opacity: 1;
+    visibility: visible;
+}
+
+.heat-gauge-label {
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.heat-gauge-container {
+    position: relative;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    height: 25px;
+    overflow: hidden;
+}
+
+.heat-gauge-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ffa500 0%, #ff6b35 100%);
+    border-radius: 13px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+/* 게이지 깜빡임 효과 (50% 이하) */
+.heat-gauge-bar.warning {
+    animation: gauge-blink 1s ease-in-out infinite;
+}
+
+/* 게이지 빠른 깜빡임 효과 (30% 이하) */
+.heat-gauge-bar.critical {
+    animation: gauge-blink-fast 0.5s ease-in-out infinite;
+}
+
+.heat-gauge-value {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 1;
+}
+
+@keyframes gauge-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes gauge-blink-fast {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* 물 아이템 획득 애니메이션 */
+@keyframes water-recovery {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.heat-gauge.recovered {
+    animation: water-recovery 0.3s ease-out;
+}

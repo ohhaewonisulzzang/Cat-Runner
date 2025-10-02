@@ -23,7 +23,9 @@ class GameStateManager {
             soundEnabled: this.loadSetting('soundEnabled', true),
             sfxEnabled: this.loadSetting('sfxEnabled', true),
             currentMap: 'normal', // normal, lava, ice
-            mapTransitioning: false // 맵 전환 중인지
+            mapTransitioning: false, // 맵 전환 중인지
+            heatGauge: 100, // 더위 게이지 (0-100)
+            lastHeatUpdate: Date.now() // 마지막 게이지 감소 시간
         };
         
         // 상태 변경 콜백들
@@ -35,17 +37,22 @@ class GameStateManager {
     // 상태 변경
     setState(newState) {
         if (this.currentState === newState) return;
-        
+
         this.previousState = this.currentState;
         this.currentState = newState;
-        
+
         this.updateUI();
-        
+
+        // 게임 시작 시 맵 클래스 업데이트
+        if (newState === 'playing') {
+            this.updateMapClass();
+        }
+
         // 상태 변경 콜백 실행
         if (this.stateChangeCallbacks[newState]) {
             this.stateChangeCallbacks[newState]();
         }
-        
+
         console.log(`게임 상태 변경: ${this.previousState} → ${this.currentState}`);
     }
     
@@ -98,7 +105,25 @@ class GameStateManager {
         setTimeout(() => {
             this.gameData.currentMap = newMap;
             this.gameData.mapTransitioning = false;
+
+            // 맵에 따라 body 클래스 업데이트
+            this.updateMapClass();
         }, 1000); // 1초 후 새 맵으로 전환
+    }
+
+    // 맵 클래스 업데이트
+    updateMapClass() {
+        // 기존 맵 클래스 제거
+        document.body.classList.remove('normal-map', 'lava-map', 'ice-map');
+
+        // 현재 맵 클래스 추가
+        if (this.gameData.currentMap === 'lava') {
+            document.body.classList.add('lava-map');
+        } else if (this.gameData.currentMap === 'ice') {
+            document.body.classList.add('ice-map');
+        } else {
+            document.body.classList.add('normal-map');
+        }
     }
 
     // 맵 전환 콜백 등록
@@ -147,7 +172,76 @@ class GameStateManager {
         if (this.isState('playing')) {
             this.gameData.gameTime += deltaTime / 1000; // 밀리초를 초로 변환
             this.updateDifficulty(); // 시간이 업데이트될 때마다 난이도 재계산
+            this.updateHeatGauge(); // 더위 게이지 업데이트
         }
+    }
+
+    // 더위 게이지 업데이트
+    updateHeatGauge() {
+        // 용암 맵에서만 작동
+        if (this.gameData.currentMap !== 'lava') {
+            return;
+        }
+
+        const now = Date.now();
+        const timePassed = (now - this.gameData.lastHeatUpdate) / 1000; // 초 단위
+
+        // 초당 2.5% 감소 (100% → 0%까지 40초)
+        if (timePassed >= 0.4) { // 0.4초마다 1% 감소
+            this.gameData.heatGauge = Math.max(0, this.gameData.heatGauge - 1);
+            this.gameData.lastHeatUpdate = now;
+
+            // 게이지 UI 업데이트
+            this.updateHeatGaugeDisplay();
+
+            // 게이지가 0이 되면 게임 오버
+            if (this.gameData.heatGauge <= 0) {
+                this.triggerHeatGameOver();
+            }
+        }
+    }
+
+    // 물 아이템 획득 시 게이지 회복
+    recoverHeatGauge() {
+        this.gameData.heatGauge = Math.min(100, this.gameData.heatGauge + 25);
+        this.updateHeatGaugeDisplay();
+    }
+
+    // 더위 게이지 UI 업데이트
+    updateHeatGaugeDisplay() {
+        const heatBar = document.getElementById('heatGaugeBar');
+        const heatValue = document.getElementById('heatValue');
+
+        if (heatBar && heatValue) {
+            heatBar.style.width = this.gameData.heatGauge + '%';
+            heatValue.textContent = Math.floor(this.gameData.heatGauge) + '%';
+
+            // 게이지 클래스 제거
+            heatBar.classList.remove('warning', 'critical');
+
+            // 게이지 색상 변경 및 깜빡임 효과
+            if (this.gameData.heatGauge <= 30) {
+                heatBar.style.background = '#ff4444';
+                heatBar.classList.add('critical'); // 빠른 깜빡임
+            } else if (this.gameData.heatGauge <= 50) {
+                heatBar.style.background = 'linear-gradient(90deg, #ff6b35 0%, #ff4444 100%)';
+                heatBar.classList.add('warning'); // 느린 깜빡임
+            } else {
+                heatBar.style.background = 'linear-gradient(90deg, #ffa500 0%, #ff6b35 100%)';
+            }
+        }
+    }
+
+    // 더위로 인한 게임 오버
+    triggerHeatGameOver() {
+        if (this.heatGameOverCallback) {
+            this.heatGameOverCallback();
+        }
+    }
+
+    // 더위 게임 오버 콜백 등록
+    onHeatGameOver(callback) {
+        this.heatGameOverCallback = callback;
     }
     
     // 게임 리셋
@@ -159,7 +253,11 @@ class GameStateManager {
         this.gameData.gameTime = 0; // 게임 시간도 리셋
         this.gameData.currentMap = 'normal'; // 일반 맵으로 리셋
         this.gameData.mapTransitioning = false;
+        this.gameData.heatGauge = 100; // 더위 게이지 리셋
+        this.gameData.lastHeatUpdate = Date.now();
         this.updateScoreDisplay();
+        this.updateHeatGaugeDisplay();
+        this.updateMapClass(); // 맵 클래스 업데이트
     }
     
     // UI 초기화
