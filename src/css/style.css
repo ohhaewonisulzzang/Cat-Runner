@@ -34,7 +34,17 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, #87CEEB 60%, #90EE90 60%, #8FBC8F 100%);
+    background: url('../assets/images/background-grass.png') center/cover no-repeat;
+}
+
+/* 용암 맵 캔버스 배경 */
+body.lava-map #gameCanvas {
+    background: url('../assets/images/background-lava.png?v=3') center/cover no-repeat;
+}
+
+/* 빙하 맵 캔버스 배경 */
+body.ice-map #gameCanvas {
+    background: url('../assets/images/background-ice.png?v=3') center/cover no-repeat;
 }
 
 /* UI 오버레이 */

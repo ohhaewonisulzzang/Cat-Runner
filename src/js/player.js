@@ -90,23 +90,27 @@ class Player {
     // 점프 실행
     executeJump() {
         if (!this.isGrounded) return;
-        
+
         const pressDuration = Date.now() - this.spaceDownTime;
-        
+        const isIceMap = this.gameState.gameData.currentMap === 'ice';
+
+        // 빙하 맵에서 차징 시간 배율 적용 (1.5배 느리게)
+        const adjustedDuration = isIceMap ? pressDuration / 1.5 : pressDuration;
+
         // 점프 파워 계산 (누른 시간에 따라)
-        if (pressDuration < 100) {
+        if (adjustedDuration < 100) {
             this.jumpPower = -10; // 짧은 점프
-        } else if (pressDuration < 300) {
+        } else if (adjustedDuration < 300) {
             this.jumpPower = -13; // 중간 점프
         } else {
             this.jumpPower = -16; // 높은 점프
         }
-        
+
         this.velocityY = this.jumpPower;
         this.isGrounded = false;
         this.isJumping = true;
         this.spacePressed = false;
-        
+
         // 점프 사운드 재생 (사운드 구현 시)
         if (this.gameState.gameData.sfxEnabled) {
             // playSound('jump');
@@ -219,21 +223,25 @@ class Player {
     // 점프 차징 표시
     renderJumpCharge(ctx) {
         const chargeDuration = Date.now() - this.spaceDownTime;
-        const chargeRatio = Math.min(chargeDuration / 300, 1); // 최대 300ms
-        
+        const isIceMap = this.gameState.gameData.currentMap === 'ice';
+
+        // 빙하 맵에서 차징 시간 배율 적용 (1.5배 느리게)
+        const adjustedDuration = isIceMap ? chargeDuration / 1.5 : chargeDuration;
+        const chargeRatio = Math.min(adjustedDuration / 300, 1); // 최대 300ms
+
         // 차징 바 배경
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.fillRect(this.x, this.y - 15, this.width, 5);
-        
-        // 차징 바
+
+        // 차징 바 (빙하 맵에서는 시각적으로 느린 차징 표시)
         if (chargeRatio < 0.33) {
-            ctx.fillStyle = '#FF9800'; // 주황색
+            ctx.fillStyle = isIceMap ? '#87CEEB' : '#FF9800'; // 빙하: 하늘색, 일반: 주황색
         } else if (chargeRatio < 0.67) {
-            ctx.fillStyle = '#FFC107'; // 노란색
+            ctx.fillStyle = isIceMap ? '#4682B4' : '#FFC107'; // 빙하: 강철색, 일반: 노란색
         } else {
-            ctx.fillStyle = '#4CAF50'; // 녹색
+            ctx.fillStyle = isIceMap ? '#1E90FF' : '#4CAF50'; // 빙하: 다저블루, 일반: 녹색
         }
-        
+
         ctx.fillRect(this.x, this.y - 15, this.width * chargeRatio, 5);
     }
     

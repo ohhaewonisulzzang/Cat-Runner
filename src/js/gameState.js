@@ -108,6 +108,10 @@ class GameStateManager {
 
             // 맵에 따라 body 클래스 업데이트
             this.updateMapClass();
+
+            // 디버깅 로그
+            console.log('맵 전환 완료:', newMap);
+            console.log('Body classes:', document.body.className);
         }, 1000); // 1초 후 새 맵으로 전환
     }
 
@@ -322,10 +326,12 @@ class GameStateManager {
         document.querySelectorAll('.screen').forEach(screen => {
             screen.classList.remove('active');
         });
-        
-        // body 클래스 업데이트 (게임 플레이 중 컨트롤 가이드 숨기기용)
-        document.body.className = this.currentState;
-        
+
+        // body 상태 클래스 업데이트 (게임 플레이 중 컨트롤 가이드 숨기기용)
+        // 맵 클래스는 유지하면서 상태 클래스만 업데이트
+        document.body.classList.remove('menu', 'playing', 'paused', 'gameOver', 'settings');
+        document.body.classList.add(this.currentState);
+
         // 현재 상태에 맞는 화면 표시
         switch (this.currentState) {
             case this.states.MENU:

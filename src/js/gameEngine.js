@@ -4,27 +4,41 @@ class GameEngine {
         // 캔버스 초기화
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        
+
         // 게임 상태 관리자
         this.gameState = new GameStateManager();
-        
+
         // 게임 객체들
-        this.player = new Player(256, 620, this.gameState); // 화면 왼쪽 20%, 지면 위
+        this.player = new Player(256, 520, this.gameState); // 화면 왼쪽 20%, 지면 위 (100픽셀 위로 상승)
         this.obstacleManager = new ObstacleManager(this.gameState);
-        
+
         // 타이밍 관련
         this.lastTime = 0;
         this.accumulator = 0;
         this.targetFPS = 60;
         this.fixedTimeStep = 1000 / this.targetFPS;
-        
+
         // 게임 루프 상태
         this.isRunning = false;
-        
+
         // 배경 관련
         this.backgroundX = 0;
         this.groundX = 0;
-        
+
+        // 배경 이미지 로드
+        this.backgroundImages = {
+            grass: new Image(),
+            lava: new Image(),
+            ice: new Image(),
+            desert: new Image(),
+            witch: new Image()
+        };
+        this.backgroundImages.grass.src = 'src/assets/images/background-grass.png';
+        this.backgroundImages.lava.src = 'src/assets/images/background-lava.png';
+        this.backgroundImages.ice.src = 'src/assets/images/background-ice.png';
+        this.backgroundImages.desert.src = 'src/assets/images/background-desert.png';
+        this.backgroundImages.witch.src = 'src/assets/images/background-witch.png';
+
         // 스코어 타이머
         this.scoreTimer = 0;
         this.scoreInterval = 100; // 0.1초마다 1점
@@ -41,7 +55,7 @@ class GameEngine {
 
         // 상태 변경 콜백 등록
         this.setupStateCallbacks();
-        
+
         // 초기화
         this.initialize();
     }
@@ -323,117 +337,68 @@ class GameEngine {
 
     // 일반 배경 렌더링
     renderNormalBackground() {
-        // 하늘 그라데이션
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(0.6, '#87CEEB');
-        gradient.addColorStop(0.6, '#90EE90');
-        gradient.addColorStop(1, '#8FBC8F');
+        // 배경 이미지 그리기 (스크롤 효과)
+        if (this.backgroundImages.grass.complete) {
+            // 패럴랙스 효과를 위한 배경 스크롤 (느린 속도)
+            const bgX = this.backgroundX % 1280;
 
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, 1280, 720);
-
-        // 구름 데코레이션
-        this.renderClouds();
-
-        // 나무 데코레이션
-        this.renderTrees();
-
-        // 지면 패턴
-        this.renderGround();
-
-        // 지평선
-        this.ctx.strokeStyle = '#228B22';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, 670);
-        this.ctx.lineTo(1280, 670);
-        this.ctx.stroke();
+            // 배경을 두 번 그려서 무한 스크롤 효과
+            this.ctx.drawImage(this.backgroundImages.grass, bgX, 0, 1280, 720);
+            this.ctx.drawImage(this.backgroundImages.grass, bgX + 1280, 0, 1280, 720);
+        } else {
+            // 이미지 로딩 중일 때 기본 배경
+            const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.6, '#87CEEB');
+            gradient.addColorStop(0.6, '#90EE90');
+            gradient.addColorStop(1, '#8FBC8F');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, 1280, 720);
+        }
     }
 
     // 용암 배경 렌더링
     renderLavaBackground() {
-        // 용암 하늘 그라데이션
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
-        gradient.addColorStop(0, '#1a0000');
-        gradient.addColorStop(0.6, '#4a0000');
-        gradient.addColorStop(0.6, '#8B0000');
-        gradient.addColorStop(1, '#FF4500');
+        // 배경 이미지 그리기 (스크롤 효과)
+        if (this.backgroundImages.lava.complete) {
+            // 패럴랙스 효과를 위한 배경 스크롤 (느린 속도)
+            const bgX = this.backgroundX % 1280;
 
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, 1280, 720);
-
-        // 화산 데코레이션
-        this.renderVolcanoes();
-
-        // 용암 방울 데코레이션
-        this.renderLavaBubbles();
-
-        // 용암 지면
-        this.ctx.fillStyle = '#8B0000';
-        this.ctx.fillRect(0, 670, 1280, 50);
-
-        // 용암 효과 (움직이는 용암)
-        this.ctx.fillStyle = '#FF4500';
-        for (let i = 0; i < 1280; i += 30) {
-            const lavaX = (i + this.groundX * 2) % 1280;
-            if (lavaX > -30) {
-                this.ctx.fillRect(lavaX, 670 + Math.sin((lavaX + this.groundX) * 0.1) * 5, 25, 10);
-            }
+            // 배경을 두 번 그려서 무한 스크롤 효과
+            this.ctx.drawImage(this.backgroundImages.lava, bgX, 0, 1280, 720);
+            this.ctx.drawImage(this.backgroundImages.lava, bgX + 1280, 0, 1280, 720);
+        } else {
+            // 이미지 로딩 중일 때 기본 배경
+            const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
+            gradient.addColorStop(0, '#1a0000');
+            gradient.addColorStop(0.6, '#4a0000');
+            gradient.addColorStop(0.6, '#8B0000');
+            gradient.addColorStop(1, '#FF4500');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, 1280, 720);
         }
-
-        // 용암 지평선
-        this.ctx.strokeStyle = '#FF0000';
-        this.ctx.lineWidth = 3;
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, 670);
-        this.ctx.lineTo(1280, 670);
-        this.ctx.stroke();
     }
 
     // 빙하 배경 렌더링
     renderIceBackground() {
-        // 빙하 하늘 그라데이션
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
-        gradient.addColorStop(0, '#1a1a2e');
-        gradient.addColorStop(0.5, '#16213e');
-        gradient.addColorStop(0.7, '#0f3460');
-        gradient.addColorStop(1, '#53a8b6');
+        // 배경 이미지 그리기 (스크롤 효과)
+        if (this.backgroundImages.ice.complete) {
+            // 패럴랙스 효과를 위한 배경 스크롤 (느린 속도)
+            const bgX = this.backgroundX % 1280;
 
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, 1280, 720);
-
-        // 눈 내리는 효과
-        this.renderSnowfall();
-
-        // 빙산 데코레이션
-        this.renderIcebergs();
-
-        // 오로라 효과
-        this.renderAurora();
-
-        // 얼음 지면
-        this.ctx.fillStyle = '#b8e4f0';
-        this.ctx.fillRect(0, 670, 1280, 50);
-
-        // 얼음 반짝이는 효과
-        this.ctx.fillStyle = '#d4f1f9';
-        for (let i = 0; i < 1280; i += 40) {
-            const iceX = (i + this.groundX) % 1280;
-            if (iceX > -40) {
-                const sparkleY = 670 + Math.sin((iceX + this.groundX) * 0.05) * 3;
-                this.ctx.fillRect(iceX, sparkleY, 8, 3);
-                this.ctx.fillRect(iceX + 15, sparkleY + 5, 5, 2);
-            }
+            // 배경을 두 번 그려서 무한 스크롤 효과
+            this.ctx.drawImage(this.backgroundImages.ice, bgX, 0, 1280, 720);
+            this.ctx.drawImage(this.backgroundImages.ice, bgX + 1280, 0, 1280, 720);
+        } else {
+            // 이미지 로딩 중일 때 기본 배경
+            const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(0.5, '#16213e');
+            gradient.addColorStop(0.7, '#0f3460');
+            gradient.addColorStop(1, '#53a8b6');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, 1280, 720);
         }
-
-        // 빙하 지평선
-        this.ctx.strokeStyle = '#89cff0';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, 670);
-        this.ctx.lineTo(1280, 670);
-        this.ctx.stroke();
     }
     
     // 구름 렌더링

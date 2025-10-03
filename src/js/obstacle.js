@@ -5,14 +5,14 @@ class Obstacle {
         this.y = y;
         this.type = type; // 'ground' 또는 'air'
         this.size = size; // 'small', 'medium', 'large'
-        
+
         // 크기 설정
         this.setSizeProperties();
-        
+
         // 상태
         this.active = true;
         this.passed = false;
-        
+
         // 애니메이션 (선택사항)
         this.animationFrame = 0;
         this.animationSpeed = 0.05;
@@ -128,7 +128,7 @@ class Obstacle {
         ctx.fillRect(this.x, this.y, 3, this.height);
     }
     
-    // 공중 장애물 렌더링
+    // 공중 장애물 렌더링 (원래 기본으로 복구)
     renderAirObstacle(ctx) {
         // 크기별 색상
         switch (this.size) {
@@ -377,8 +377,8 @@ class ObstacleManager {
         // 크기 결정
         const size = this.determineSize();
 
-        // Y 위치 결정
-        const y = type === 'ground' ? 620 : 400;
+        // Y 위치 결정 (100픽셀 위로 조정)
+        const y = type === 'ground' ? 520 : 300;
 
         // 장애물 생성
         const obstacle = new Obstacle(x, y, type, size);
