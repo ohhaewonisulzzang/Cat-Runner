@@ -3,8 +3,8 @@ class Player {
     constructor(x, y, gameState) {
         this.x = x;
         this.y = y;
-        this.width = 70;
-        this.height = 70;
+        this.width = 90;
+        this.height = 90;
         this.gameState = gameState;
 
         // 물리 속성
@@ -31,7 +31,8 @@ class Player {
 
         // 이미지 로드
         this.images = {
-            run: []
+            run: [],
+            jump: null
         };
         this.imagesLoaded = false;
         this.loadImages();
@@ -42,7 +43,7 @@ class Player {
 
     // 이미지 로드
     loadImages() {
-        const imagesToLoad = 4; // run_1 ~ run_4
+        const imagesToLoad = 5; // run_1 ~ run_4 + jump
         let loadedCount = 0;
 
         // 달리기 이미지 로드
@@ -57,10 +58,27 @@ class Player {
             };
             img.onerror = () => {
                 console.error(`이미지 로드 실패: cat_run_${i}.png`);
+                loadedCount++;
             };
             img.src = `src/assets/images/player/cat_run_${i}.png`;
             this.images.run.push(img);
         }
+
+        // 점프 이미지 로드
+        const jumpImg = new Image();
+        jumpImg.onload = () => {
+            loadedCount++;
+            if (loadedCount === imagesToLoad) {
+                this.imagesLoaded = true;
+                console.log('플레이어 이미지 로드 완료!');
+            }
+        };
+        jumpImg.onerror = () => {
+            console.error('이미지 로드 실패: cat_jump.png');
+            loadedCount++;
+        };
+        jumpImg.src = 'src/assets/images/player/cat_jump.png';
+        this.images.jump = jumpImg;
     }
     
     // 컨트롤 초기화
@@ -207,12 +225,20 @@ class Player {
         ctx.save();
 
         // 이미지가 로드되었으면 이미지 렌더링
-        if (this.imagesLoaded && this.images.run.length > 0) {
-            const currentFrame = this.images.run[this.frameIndex];
-            if (currentFrame && currentFrame.complete) {
-                ctx.drawImage(currentFrame, this.x, this.y, this.width, this.height);
+        if (this.imagesLoaded) {
+            // 점프 중일 때 점프 이미지 사용
+            if (this.isJumping && this.images.jump && this.images.jump.complete) {
+                ctx.drawImage(this.images.jump, this.x, this.y, this.width, this.height);
+            }
+            // 지면에 있을 때 달리기 애니메이션
+            else if (this.images.run.length > 0) {
+                const currentFrame = this.images.run[this.frameIndex];
+                if (currentFrame && currentFrame.complete) {
+                    ctx.drawImage(currentFrame, this.x, this.y, this.width, this.height);
+                } else {
+                    this.renderPlaceholder(ctx);
+                }
             } else {
-                // 이미지 로드 중이면 임시 사각형 표시
                 this.renderPlaceholder(ctx);
             }
         } else {
