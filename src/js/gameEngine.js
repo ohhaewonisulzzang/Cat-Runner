@@ -27,9 +27,15 @@ class GameEngine {
 
         // 배경 이미지 관련
         this.backgroundImages = {
-            grassland: null  // 초원 맵 이미지
+            grassland1: null,  // 초원 맵 1 (0-350점)
+            grassland2: null,  // 초원 맵 2 (351-700점)
+            grassland3: null   // 초원 맵 3 (701-1000점)
         };
-        this.imagesLoaded = false;
+        this.imagesLoaded = {
+            grassland1: false,
+            grassland2: false,
+            grassland3: false
+        };
 
         // 스코어 타이머
         this.scoreTimer = 0;
@@ -37,6 +43,12 @@ class GameEngine {
 
         // 맵 전환 효과
         this.transitionAlpha = 0;
+
+        // 배경 맵 전환 관련
+        this.currentBackgroundMap = null;  // 현재 배경 맵
+        this.previousBackgroundMap = null; // 이전 배경 맵
+        this.backgroundTransitionAlpha = 0; // 배경 전환 투명도 (0~1)
+        this.isBackgroundTransitioning = false; // 배경 전환 중 여부
 
         // 디버그 모드
         this.debugMode = true; // 디버그 모드 자동 활성화
@@ -54,20 +66,57 @@ class GameEngine {
     
     // 이미지 로딩
     loadImages() {
-        const grasslandImg = new Image();
-        grasslandImg.src = 'src/assets/images/background/glassland/map_01.png';
+        let loadedCount = 0;
+        const totalImages = 3;
 
-        grasslandImg.onload = () => {
-            this.backgroundImages.grassland = grasslandImg;
-            this.imagesLoaded = true;
-            console.log('초원 배경 이미지 로딩 완료');
-            this.initialize();
+        const checkAllLoaded = () => {
+            loadedCount++;
+            if (loadedCount === totalImages) {
+                console.log('모든 배경 이미지 로딩 완료');
+                this.initialize();
+            }
         };
 
-        grasslandImg.onerror = () => {
-            console.error('초원 배경 이미지 로딩 실패');
-            this.imagesLoaded = false;
-            this.initialize();
+        // map_01 로딩
+        const grassland1Img = new Image();
+        grassland1Img.src = 'src/assets/images/background/glassland/map_01.png';
+        grassland1Img.onload = () => {
+            this.backgroundImages.grassland1 = grassland1Img;
+            this.imagesLoaded.grassland1 = true;
+            console.log('초원 배경 1 (map_01) 로딩 완료');
+            checkAllLoaded();
+        };
+        grassland1Img.onerror = () => {
+            console.error('초원 배경 1 (map_01) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // map_02 로딩
+        const grassland2Img = new Image();
+        grassland2Img.src = 'src/assets/images/background/glassland/map_02.png';
+        grassland2Img.onload = () => {
+            this.backgroundImages.grassland2 = grassland2Img;
+            this.imagesLoaded.grassland2 = true;
+            console.log('초원 배경 2 (map_02) 로딩 완료');
+            checkAllLoaded();
+        };
+        grassland2Img.onerror = () => {
+            console.error('초원 배경 2 (map_02) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // map_03 로딩
+        const grassland3Img = new Image();
+        grassland3Img.src = 'src/assets/images/background/glassland/map_03.png';
+        grassland3Img.onload = () => {
+            this.backgroundImages.grassland3 = grassland3Img;
+            this.imagesLoaded.grassland3 = true;
+            console.log('초원 배경 3 (map_03) 로딩 완료');
+            checkAllLoaded();
+        };
+        grassland3Img.onerror = () => {
+            console.error('초원 배경 3 (map_03) 로딩 실패');
+            checkAllLoaded();
         };
     }
 
@@ -248,13 +297,13 @@ class GameEngine {
         if (this.gameState.isState('playing')) {
             // 게임 시간 업데이트 (난이도 자동 조정)
             this.gameState.updateGameTime(deltaTime);
-            
+
             // 플레이어 업데이트
             this.player.update(deltaTime);
-            
+
             // 장애물 관리자 업데이트
             this.obstacleManager.update(deltaTime);
-            
+
             // 충돌 검사 (무적 모드가 아닐 때만)
             if (!this.invincible && this.obstacleManager.checkCollisions(this.player)) {
                 this.gameState.setState('gameOver');
@@ -266,10 +315,13 @@ class GameEngine {
 
             // 통과한 장애물 확인
             this.obstacleManager.checkPassedObstacles(this.player.x);
-            
+
             // 배경 스크롤 업데이트
             this.updateBackground();
-            
+
+            // 배경 전환 효과 업데이트
+            this.updateBackgroundTransition(deltaTime);
+
             // 시간 기반 점수 업데이트
             this.updateTimeScore(deltaTime);
         }
@@ -278,17 +330,44 @@ class GameEngine {
     // 배경 스크롤 업데이트
     updateBackground() {
         const gameSpeed = this.gameState.gameData.gameSpeed;
-        
-        // 배경 스크롤 (느린 속도)
+
+        // 배경 스크롤 (느린 속도) - 이미지 기반 배경은 렌더링에서 모듈로 연산으로 처리
         this.backgroundX -= gameSpeed * 0.3;
-        if (this.backgroundX <= -1280) {
-            this.backgroundX = 0;
-        }
-        
+
         // 지면 스크롤 (게임 속도와 동일)
         this.groundX -= gameSpeed;
         if (this.groundX <= -1280) {
             this.groundX = 0;
+        }
+    }
+
+    // 배경 전환 효과 업데이트
+    updateBackgroundTransition(deltaTime) {
+        if (this.isBackgroundTransitioning) {
+            // 전환 속도 (0.002 per ms = 약 0.5초에 완료)
+            this.backgroundTransitionAlpha += deltaTime * 0.002;
+
+            if (this.backgroundTransitionAlpha >= 1) {
+                // 전환 완료
+                this.backgroundTransitionAlpha = 1;
+                this.isBackgroundTransitioning = false;
+                this.previousBackgroundMap = null;
+            }
+        }
+    }
+
+    // 배경 전환 시작
+    startBackgroundTransition(newMap) {
+        if (this.currentBackgroundMap !== newMap) {
+            this.previousBackgroundMap = this.currentBackgroundMap;
+            this.currentBackgroundMap = newMap;
+            this.isBackgroundTransitioning = true;
+            this.backgroundTransitionAlpha = 0;
+
+            // 새 맵으로 전환 시 배경 스크롤 위치 리셋
+            this.backgroundX = 0;
+
+            console.log(`배경 전환: ${this.previousBackgroundMap} → ${newMap}`);
         }
     }
     
@@ -349,19 +428,64 @@ class GameEngine {
     // 일반 배경 렌더링
     renderNormalBackground() {
         const score = this.gameState.gameData.score;
+        let targetMap = null;
 
-        // 0~350점: 초원 맵 이미지 배경
-        if (score < 350 && this.imagesLoaded && this.backgroundImages.grassland) {
-            this.renderGrasslandBackground();
+        // 점수에 따른 배경 맵 선택
+        if (score < 351) {
+            // 0~350점: map_01
+            if (this.imagesLoaded.grassland1 && this.backgroundImages.grassland1) {
+                targetMap = 'grassland1';
+            }
+        } else if (score < 701) {
+            // 351~700점: map_02
+            if (this.imagesLoaded.grassland2 && this.backgroundImages.grassland2) {
+                targetMap = 'grassland2';
+            }
+        } else if (score < 1001) {
+            // 701~1000점: map_03
+            if (this.imagesLoaded.grassland3 && this.backgroundImages.grassland3) {
+                targetMap = 'grassland3';
+            }
         } else {
-            // 350점 이상 또는 이미지 로딩 실패 시: 기존 방식
+            // 1001점 이상: 기존 방식
+            targetMap = 'default';
+        }
+
+        // 맵 전환 체크
+        if (targetMap && targetMap !== this.currentBackgroundMap) {
+            this.startBackgroundTransition(targetMap);
+        }
+
+        // 전환 중일 때 이전 배경과 새 배경을 블렌딩
+        if (this.isBackgroundTransitioning && this.previousBackgroundMap) {
+            // 이전 배경 그리기
+            this.renderBackgroundByName(this.previousBackgroundMap);
+
+            // 새 배경을 투명도와 함께 그리기
+            this.ctx.globalAlpha = this.backgroundTransitionAlpha;
+            this.renderBackgroundByName(this.currentBackgroundMap);
+            this.ctx.globalAlpha = 1.0;
+        } else {
+            // 일반 렌더링
+            this.renderBackgroundByName(targetMap || this.currentBackgroundMap || 'default');
+        }
+    }
+
+    // 배경 이름으로 렌더링
+    renderBackgroundByName(mapName) {
+        if (mapName === 'grassland1' && this.backgroundImages.grassland1) {
+            this.renderGrasslandBackground(this.backgroundImages.grassland1);
+        } else if (mapName === 'grassland2' && this.backgroundImages.grassland2) {
+            this.renderGrasslandBackground(this.backgroundImages.grassland2);
+        } else if (mapName === 'grassland3' && this.backgroundImages.grassland3) {
+            this.renderGrasslandBackground(this.backgroundImages.grassland3);
+        } else {
             this.renderDefaultBackground();
         }
     }
 
     // 초원 배경 이미지 렌더링 (무한 스크롤)
-    renderGrasslandBackground() {
-        const img = this.backgroundImages.grassland;
+    renderGrasslandBackground(img) {
         const imgWidth = img.width;
         const imgHeight = img.height;
 
@@ -370,13 +494,22 @@ class GameEngine {
         const scaledWidth = imgWidth * scaleY;
 
         // 무한 스크롤을 위한 x 위치 계산
-        // backgroundX는 음수로 증가하므로 양수로 변환하여 처리
-        const scrollX = (-this.backgroundX * 0.3) % scaledWidth;
+        // backgroundX는 음수로 증가하므로 양수로 변환 후 모듈로 연산
+        const scrollDistance = this.backgroundX * 0.3; // 패럴랙스 효과
+
+        // 양수로 정규화된 스크롤 위치 (모듈로 연산으로 반복)
+        const normalizedScroll = ((scrollDistance % scaledWidth) + scaledWidth) % scaledWidth;
+
+        // 첫 번째 이미지 위치 계산
+        const x1 = normalizedScroll;
+
+        // 두 번째 이미지 위치 (첫 번째 이미지 바로 다음)
+        const x2 = normalizedScroll - scaledWidth;
 
         // 첫 번째 이미지 그리기
         this.ctx.drawImage(
             img,
-            -scrollX,
+            x1,
             0,
             scaledWidth,
             720
@@ -385,17 +518,17 @@ class GameEngine {
         // 두 번째 이미지 그리기 (끊김 없는 반복을 위해)
         this.ctx.drawImage(
             img,
-            scaledWidth - scrollX,
+            x2,
             0,
             scaledWidth,
             720
         );
 
-        // 필요시 세 번째 이미지 (화면이 매우 클 경우 대비)
-        if (scaledWidth - scrollX < 1280) {
+        // 세 번째 이미지 (화면이 매우 넓을 경우)
+        if (x1 > 0 || x2 + scaledWidth < 1280) {
             this.ctx.drawImage(
                 img,
-                scaledWidth * 2 - scrollX,
+                x2 - scaledWidth,
                 0,
                 scaledWidth,
                 720
@@ -750,11 +883,11 @@ class GameEngine {
     // 디버그 정보 렌더링
     renderDebugInfo() {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(10, 10, 300, 200);
-        
+        this.ctx.fillRect(10, 10, 300, 260);
+
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px monospace';
-        
+
         const obsDebug = this.obstacleManager.getDebugInfo();
         const debugInfo = [
             `FPS: ${Math.round(1000 / (this.lastTime - (this.lastTime - 16)))}`,
@@ -764,6 +897,12 @@ class GameEngine {
             `Difficulty: ${this.gameState.gameData.difficultyLevel}`,
             `Game Time: ${this.gameState.gameData.gameTime.toFixed(1)}s`,
             '',
+            'Background:',
+            `  Current: ${this.currentBackgroundMap || 'none'}`,
+            `  Transitioning: ${this.isBackgroundTransitioning}`,
+            `  Transition α: ${this.backgroundTransitionAlpha.toFixed(2)}`,
+            `  Loaded: ${this.imagesLoaded.grassland1 ? '1' : '-'}${this.imagesLoaded.grassland2 ? '2' : '-'}${this.imagesLoaded.grassland3 ? '3' : '-'}`,
+            '',
             'Player:',
             `  ${this.player.getDebugInfo().position}`,
             `  Velocity: ${this.player.getDebugInfo().velocity}`,
@@ -772,10 +911,9 @@ class GameEngine {
             'Obstacles:',
             `  Count: ${obsDebug.obstacleCount}`,
             `  Active: ${obsDebug.activeObstacles}`,
-            `  Timer: ${obsDebug.spawnTimer}ms`,
-            `  Interval: ${obsDebug.spawnInterval}ms`
+            `  Timer: ${obsDebug.spawnTimer}ms`
         ];
-        
+
         debugInfo.forEach((line, index) => {
             this.ctx.fillText(line, 20, 30 + index * 16);
         });
