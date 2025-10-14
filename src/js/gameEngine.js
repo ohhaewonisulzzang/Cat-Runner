@@ -4,27 +4,33 @@ class GameEngine {
         // 캔버스 초기화
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        
+
         // 게임 상태 관리자
         this.gameState = new GameStateManager();
-        
+
         // 게임 객체들
         this.player = new Player(256, 620, this.gameState); // 화면 왼쪽 20%, 지면 위
         this.obstacleManager = new ObstacleManager(this.gameState);
-        
+
         // 타이밍 관련
         this.lastTime = 0;
         this.accumulator = 0;
         this.targetFPS = 60;
         this.fixedTimeStep = 1000 / this.targetFPS;
-        
+
         // 게임 루프 상태
         this.isRunning = false;
-        
+
         // 배경 관련
         this.backgroundX = 0;
         this.groundX = 0;
-        
+
+        // 배경 이미지 관련
+        this.backgroundImages = {
+            grassland: null  // 초원 맵 이미지
+        };
+        this.imagesLoaded = false;
+
         // 스코어 타이머
         this.scoreTimer = 0;
         this.scoreInterval = 100; // 0.1초마다 1점
@@ -41,11 +47,30 @@ class GameEngine {
 
         // 상태 변경 콜백 등록
         this.setupStateCallbacks();
-        
-        // 초기화
-        this.initialize();
+
+        // 이미지 로딩 및 초기화
+        this.loadImages();
     }
     
+    // 이미지 로딩
+    loadImages() {
+        const grasslandImg = new Image();
+        grasslandImg.src = 'src/assets/images/background/glassland/map_01.png';
+
+        grasslandImg.onload = () => {
+            this.backgroundImages.grassland = grasslandImg;
+            this.imagesLoaded = true;
+            console.log('초원 배경 이미지 로딩 완료');
+            this.initialize();
+        };
+
+        grasslandImg.onerror = () => {
+            console.error('초원 배경 이미지 로딩 실패');
+            this.imagesLoaded = false;
+            this.initialize();
+        };
+    }
+
     // 초기화
     initialize() {
         // 캔버스 크기 설정
@@ -323,6 +348,63 @@ class GameEngine {
 
     // 일반 배경 렌더링
     renderNormalBackground() {
+        const score = this.gameState.gameData.score;
+
+        // 0~350점: 초원 맵 이미지 배경
+        if (score < 350 && this.imagesLoaded && this.backgroundImages.grassland) {
+            this.renderGrasslandBackground();
+        } else {
+            // 350점 이상 또는 이미지 로딩 실패 시: 기존 방식
+            this.renderDefaultBackground();
+        }
+    }
+
+    // 초원 배경 이미지 렌더링 (무한 스크롤)
+    renderGrasslandBackground() {
+        const img = this.backgroundImages.grassland;
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+
+        // 캔버스 크기에 맞게 이미지 스케일 계산
+        const scaleY = 720 / imgHeight;
+        const scaledWidth = imgWidth * scaleY;
+
+        // 무한 스크롤을 위한 x 위치 계산
+        // backgroundX는 음수로 증가하므로 양수로 변환하여 처리
+        const scrollX = (-this.backgroundX * 0.3) % scaledWidth;
+
+        // 첫 번째 이미지 그리기
+        this.ctx.drawImage(
+            img,
+            -scrollX,
+            0,
+            scaledWidth,
+            720
+        );
+
+        // 두 번째 이미지 그리기 (끊김 없는 반복을 위해)
+        this.ctx.drawImage(
+            img,
+            scaledWidth - scrollX,
+            0,
+            scaledWidth,
+            720
+        );
+
+        // 필요시 세 번째 이미지 (화면이 매우 클 경우 대비)
+        if (scaledWidth - scrollX < 1280) {
+            this.ctx.drawImage(
+                img,
+                scaledWidth * 2 - scrollX,
+                0,
+                scaledWidth,
+                720
+            );
+        }
+    }
+
+    // 기존 방식 배경 렌더링
+    renderDefaultBackground() {
         // 하늘 그라데이션
         const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
         gradient.addColorStop(0, '#87CEEB');
