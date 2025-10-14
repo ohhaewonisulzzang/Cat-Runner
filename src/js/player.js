@@ -15,9 +15,11 @@ class Player {
 
         // 점프 관련
         this.isJumping = false;
-        this.jumpStartTime = 0;
-        this.jumpPower = 0;
         this.maxJumpHeight = 250;
+        this.minJumpPower = -10; // 최소 점프 힘
+        this.maxJumpPower = -16; // 최대 점프 힘
+        this.jumpHoldTime = 0; // 점프 키를 누르고 있는 시간
+        this.maxJumpHoldTime = 300; // 최대 점프 홀드 시간 (밀리초)
 
         // 애니메이션
         this.frameIndex = 0;
@@ -27,7 +29,7 @@ class Player {
 
         // 입력 상태
         this.spacePressed = false;
-        this.spaceDownTime = 0;
+        this.jumpStartTime = 0; // 점프 시작 시간
 
         // 이미지 로드
         this.images = {
@@ -96,17 +98,17 @@ class Player {
         if (e.code === 'Space' && this.gameState.isState('playing')) {
             e.preventDefault();
             if (!this.spacePressed && this.isGrounded) {
+                this.spacePressed = true;
+                this.jumpStartTime = Date.now();
                 this.startJump();
             }
         }
     }
-    
+
     handleKeyUp(e) {
         if (e.code === 'Space' && this.gameState.isState('playing')) {
             e.preventDefault();
-            if (this.spacePressed) {
-                this.executeJump();
-            }
+            this.spacePressed = false;
         }
     }
     
@@ -115,46 +117,30 @@ class Player {
         if (this.gameState.isState('playing')) {
             e.preventDefault();
             if (!this.spacePressed && this.isGrounded) {
+                this.spacePressed = true;
+                this.jumpStartTime = Date.now();
                 this.startJump();
             }
         }
     }
-    
+
     handleTouchEnd(e) {
         if (this.gameState.isState('playing')) {
             e.preventDefault();
-            if (this.spacePressed) {
-                this.executeJump();
-            }
+            this.spacePressed = false;
         }
     }
     
-    // 점프 시작
+    // 점프 시작 - 즉시 점프 시작
     startJump() {
-        this.spacePressed = true;
-        this.spaceDownTime = Date.now();
-    }
-    
-    // 점프 실행
-    executeJump() {
         if (!this.isGrounded) return;
-        
-        const pressDuration = Date.now() - this.spaceDownTime;
-        
-        // 점프 파워 계산 (누른 시간에 따라)
-        if (pressDuration < 100) {
-            this.jumpPower = -10; // 짧은 점프
-        } else if (pressDuration < 300) {
-            this.jumpPower = -13; // 중간 점프
-        } else {
-            this.jumpPower = -16; // 높은 점프
-        }
-        
-        this.velocityY = this.jumpPower;
+
+        // 최소 점프 힘으로 즉시 점프 시작
+        this.velocityY = this.minJumpPower;
         this.isGrounded = false;
         this.isJumping = true;
-        this.spacePressed = false;
-        
+        this.jumpHoldTime = 0;
+
         // 점프 사운드 재생 (사운드 구현 시)
         if (this.gameState.gameData.sfxEnabled) {
             // playSound('jump');
@@ -177,22 +163,39 @@ class Player {
     
     // 물리 업데이트
     updatePhysics() {
+        // 점프 중이고 스페이스바를 누르고 있으면 추가 상승력 적용
+        if (this.isJumping && this.spacePressed && this.velocityY < 0) {
+            const holdDuration = Date.now() - this.jumpStartTime;
+
+            // 최대 홀드 시간까지만 추가 힘 적용
+            if (holdDuration < this.maxJumpHoldTime) {
+                // 누르는 시간에 비례하여 추가 상승력 적용
+                const holdRatio = holdDuration / this.maxJumpHoldTime;
+                const additionalPower = (this.maxJumpPower - this.minJumpPower) * holdRatio;
+                const targetVelocity = this.minJumpPower + additionalPower;
+
+                // 부드럽게 속도 증가
+                this.velocityY = Math.max(this.velocityY - 0.3, targetVelocity);
+            }
+        }
+
         // 중력 적용
         if (!this.isGrounded) {
             this.velocityY += this.gravity;
         }
-        
+
         // Y 위치 업데이트
         this.y += this.velocityY;
-        
+
         // 지면 충돌 검사
         if (this.y >= this.groundY) {
             this.y = this.groundY;
             this.velocityY = 0;
             this.isGrounded = true;
             this.isJumping = false;
+            this.jumpHoldTime = 0;
         }
-        
+
         // 최대 점프 높이 제한
         if (this.y < this.groundY - this.maxJumpHeight) {
             this.y = this.groundY - this.maxJumpHeight;
@@ -213,10 +216,9 @@ class Player {
     
     // 점프 입력 상태 업데이트
     updateJumpInput() {
-        // 점프 차징 표시 (선택사항)
-        if (this.spacePressed && this.isGrounded) {
-            const chargeDuration = Date.now() - this.spaceDownTime;
-            // 차징 표시 로직 (UI에서 처리)
+        // 점프 홀드 시간 업데이트
+        if (this.spacePressed && this.isJumping) {
+            this.jumpHoldTime = Date.now() - this.jumpStartTime;
         }
     }
     
@@ -246,10 +248,6 @@ class Player {
             this.renderPlaceholder(ctx);
         }
 
-        // 점프 차징 표시
-        if (this.spacePressed && this.isGrounded) {
-            this.renderJumpCharge(ctx);
-        }
 
         ctx.restore();
     }
@@ -264,18 +262,6 @@ class Player {
             ctx.fillStyle = '#FFB74D';
         }
 
-        // 점프 차징 중일 때 색상 변경
-        if (this.spacePressed && this.isGrounded) {
-            const chargeDuration = Date.now() - this.spaceDownTime;
-            if (chargeDuration > 300) {
-                ctx.fillStyle = '#4CAF50'; // 최대 차지
-            } else if (chargeDuration > 100) {
-                ctx.fillStyle = '#FFC107'; // 중간 차지
-            } else {
-                ctx.fillStyle = '#FF9800'; // 최소 차지
-            }
-        }
-
         // 캐릭터 그리기
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
@@ -287,27 +273,6 @@ class Player {
         ctx.fillStyle = 'black';
         ctx.fillRect(this.x + 12, this.y + 12, 4, 4);
         ctx.fillRect(this.x + 27, this.y + 12, 4, 4);
-    }
-    
-    // 점프 차징 표시
-    renderJumpCharge(ctx) {
-        const chargeDuration = Date.now() - this.spaceDownTime;
-        const chargeRatio = Math.min(chargeDuration / 300, 1); // 최대 300ms
-        
-        // 차징 바 배경
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(this.x, this.y - 15, this.width, 5);
-        
-        // 차징 바
-        if (chargeRatio < 0.33) {
-            ctx.fillStyle = '#FF9800'; // 주황색
-        } else if (chargeRatio < 0.67) {
-            ctx.fillStyle = '#FFC107'; // 노란색
-        } else {
-            ctx.fillStyle = '#4CAF50'; // 녹색
-        }
-        
-        ctx.fillRect(this.x, this.y - 15, this.width * chargeRatio, 5);
     }
     
     // 충돌 박스 반환
@@ -341,7 +306,8 @@ class Player {
             velocity: Math.round(this.velocityY * 10) / 10,
             grounded: this.isGrounded,
             jumping: this.isJumping,
-            charging: this.spacePressed
+            holding: this.spacePressed,
+            holdTime: Math.round(this.jumpHoldTime)
         };
     }
 }

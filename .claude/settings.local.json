@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nImplement scrolling background system with score-based map transitions\n\n- Add image loading system for three grassland maps (map_01, map_02, map_03)\n- Implement infinite parallax scrolling for background images\n- Add smooth fade transition effects between maps (0.5s duration)\n- Score-based map switching: 0-350 (map_01), 351-700 (map_02), 701-1000 (map_03)\n- Fix scrolling position reset on map transitions\n- Add background transition debug info\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd lava and ice map backgrounds with score-based transitions\n\n- Add 5 new background images: lava (map_01, map_02), ice (map_01, map_02, map_03)\n- Implement lava map rendering (1000-2000: map_01, 2001-3000: map_02)\n- Implement ice map rendering (3001-4000: map_01, 4001-5000: map_02, 5001+: map_03)\n- Add smooth transition effects for lava and ice backgrounds\n- Adjust ice background scroll speed (0.3 → 0.05) for slower appearance\n- Update map transition threshold: lava→ice at 3000 points (was 2000)\n- Add debug info for lava and ice map loading status\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(chcp:*)"
     ],
     "deny": [],
     "ask": []
