@@ -223,7 +223,7 @@ class Player {
     }
     
     // 렌더링
-    render(ctx) {
+    render(ctx, debugMode = false) {
         ctx.save();
 
         // 이미지가 로드되었으면 이미지 렌더링
@@ -248,8 +248,45 @@ class Player {
             this.renderPlaceholder(ctx);
         }
 
+        // 디버그 모드일 때 히트박스 렌더링
+        if (debugMode) {
+            this.renderHitbox(ctx);
+        }
 
         ctx.restore();
+    }
+
+    // 히트박스 렌더링 (디버그 모드)
+    renderHitbox(ctx) {
+        const bounds = this.getBounds();
+
+        // 히트박스 외곽선
+        ctx.strokeStyle = '#00FF00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        // 히트박스 반투명 채우기
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        // 중심점 표시
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 십자선 (중심점)
+        ctx.strokeStyle = '#FF0000';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(centerX - 5, centerY);
+        ctx.lineTo(centerX + 5, centerY);
+        ctx.moveTo(centerX, centerY - 5);
+        ctx.lineTo(centerX, centerY + 5);
+        ctx.stroke();
     }
 
     // 임시 플레이스홀더 렌더링
@@ -277,13 +314,14 @@ class Player {
     
     // 충돌 박스 반환
     getBounds() {
-        // 실제 충돌 판정을 위해 약간 작게 설정
-        const padding = 5;
+        // 실제 충돌 판정을 위해 캐릭터보다 작게 설정
+        const paddingX = 20; // 좌우 여백
+        const paddingY = 15; // 상하 여백
         return {
-            x: this.x + padding,
-            y: this.y + padding,
-            width: this.width - padding * 2,
-            height: this.height - padding * 2
+            x: this.x + paddingX,
+            y: this.y + paddingY,
+            width: this.width - paddingX * 2,
+            height: this.height - paddingY * 2
         };
     }
     

@@ -61,7 +61,7 @@ class GameEngine {
         this.isBackgroundTransitioning = false; // 배경 전환 중 여부
 
         // 디버그 모드
-        this.debugMode = true; // 디버그 모드 자동 활성화
+        this.debugMode = false; // 디버그 모드 기본 꺼짐
 
         // 테스트 모드
         this.testMode = false;
@@ -206,20 +206,23 @@ class GameEngine {
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         
-        // 디버그 키 등록
+        // 디버그/테스트 키 등록
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'F12') {
+            // 디버그 모드 토글 (` 키)
+            if (e.code === 'Backquote') {
                 e.preventDefault();
                 this.debugMode = !this.debugMode;
+                console.log(`디버그 모드: ${this.debugMode ? 'ON' : 'OFF'}`);
             }
 
-            // 테스트 모드 토글 (` 키)
-            if (e.code === 'Backquote') {
+            // 테스트 모드 토글 (F12 키)
+            if (e.code === 'F12') {
                 e.preventDefault();
                 this.testMode = !this.testMode;
                 if (!this.testMode) {
                     this.invincible = false; // 테스트 모드 해제 시 무적 상태도 해제
                 }
+                console.log(`테스트 모드: ${this.testMode ? 'ON' : 'OFF'}`);
             }
 
             // 테스트 모드 기능들
@@ -472,7 +475,7 @@ class GameEngine {
         if (this.gameState.isState('playing') || this.gameState.isState('paused')) {
             // 게임 객체 렌더링
             this.obstacleManager.render(this.ctx);
-            this.player.render(this.ctx);
+            this.player.render(this.ctx, this.debugMode);
         }
         
         // 디버그 정보 렌더링
