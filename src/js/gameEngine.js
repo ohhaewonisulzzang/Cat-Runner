@@ -29,12 +29,22 @@ class GameEngine {
         this.backgroundImages = {
             grassland1: null,  // 초원 맵 1 (0-350점)
             grassland2: null,  // 초원 맵 2 (351-700점)
-            grassland3: null   // 초원 맵 3 (701-1000점)
+            grassland3: null,  // 초원 맵 3 (701-1000점)
+            lava1: null,       // 용암 맵 1 (1000-2000점)
+            lava2: null,       // 용암 맵 2 (2001-3000점)
+            ice1: null,        // 빙하 맵 1 (3001-4000점)
+            ice2: null,        // 빙하 맵 2 (4001-5000점)
+            ice3: null         // 빙하 맵 3 (5001점~)
         };
         this.imagesLoaded = {
             grassland1: false,
             grassland2: false,
-            grassland3: false
+            grassland3: false,
+            lava1: false,
+            lava2: false,
+            ice1: false,
+            ice2: false,
+            ice3: false
         };
 
         // 스코어 타이머
@@ -67,7 +77,7 @@ class GameEngine {
     // 이미지 로딩
     loadImages() {
         let loadedCount = 0;
-        const totalImages = 3;
+        const totalImages = 8;
 
         const checkAllLoaded = () => {
             loadedCount++;
@@ -77,7 +87,7 @@ class GameEngine {
             }
         };
 
-        // map_01 로딩
+        // 초원 map_01 로딩
         const grassland1Img = new Image();
         grassland1Img.src = 'src/assets/images/background/glassland/map_01.png';
         grassland1Img.onload = () => {
@@ -91,7 +101,7 @@ class GameEngine {
             checkAllLoaded();
         };
 
-        // map_02 로딩
+        // 초원 map_02 로딩
         const grassland2Img = new Image();
         grassland2Img.src = 'src/assets/images/background/glassland/map_02.png';
         grassland2Img.onload = () => {
@@ -105,7 +115,7 @@ class GameEngine {
             checkAllLoaded();
         };
 
-        // map_03 로딩
+        // 초원 map_03 로딩
         const grassland3Img = new Image();
         grassland3Img.src = 'src/assets/images/background/glassland/map_03.png';
         grassland3Img.onload = () => {
@@ -116,6 +126,76 @@ class GameEngine {
         };
         grassland3Img.onerror = () => {
             console.error('초원 배경 3 (map_03) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 용암 map_01 로딩
+        const lava1Img = new Image();
+        lava1Img.src = 'src/assets/images/background/lava/map_01.png';
+        lava1Img.onload = () => {
+            this.backgroundImages.lava1 = lava1Img;
+            this.imagesLoaded.lava1 = true;
+            console.log('용암 배경 1 (map_01) 로딩 완료');
+            checkAllLoaded();
+        };
+        lava1Img.onerror = () => {
+            console.error('용암 배경 1 (map_01) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 용암 map_02 로딩
+        const lava2Img = new Image();
+        lava2Img.src = 'src/assets/images/background/lava/map_02.png';
+        lava2Img.onload = () => {
+            this.backgroundImages.lava2 = lava2Img;
+            this.imagesLoaded.lava2 = true;
+            console.log('용암 배경 2 (map_02) 로딩 완료');
+            checkAllLoaded();
+        };
+        lava2Img.onerror = () => {
+            console.error('용암 배경 2 (map_02) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 빙하 map_01 로딩
+        const ice1Img = new Image();
+        ice1Img.src = 'src/assets/images/background/ice/map_01.png';
+        ice1Img.onload = () => {
+            this.backgroundImages.ice1 = ice1Img;
+            this.imagesLoaded.ice1 = true;
+            console.log('빙하 배경 1 (map_01) 로딩 완료');
+            checkAllLoaded();
+        };
+        ice1Img.onerror = () => {
+            console.error('빙하 배경 1 (map_01) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 빙하 map_02 로딩
+        const ice2Img = new Image();
+        ice2Img.src = 'src/assets/images/background/ice/map_02.png';
+        ice2Img.onload = () => {
+            this.backgroundImages.ice2 = ice2Img;
+            this.imagesLoaded.ice2 = true;
+            console.log('빙하 배경 2 (map_02) 로딩 완료');
+            checkAllLoaded();
+        };
+        ice2Img.onerror = () => {
+            console.error('빙하 배경 2 (map_02) 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 빙하 map_03 로딩
+        const ice3Img = new Image();
+        ice3Img.src = 'src/assets/images/background/ice/map_03.png';
+        ice3Img.onload = () => {
+            this.backgroundImages.ice3 = ice3Img;
+            this.imagesLoaded.ice3 = true;
+            console.log('빙하 배경 3 (map_03) 로딩 완료');
+            checkAllLoaded();
+        };
+        ice3Img.onerror = () => {
+            console.error('빙하 배경 3 (map_03) 로딩 실패');
             checkAllLoaded();
         };
     }
@@ -568,6 +648,109 @@ class GameEngine {
 
     // 용암 배경 렌더링
     renderLavaBackground() {
+        const score = this.gameState.gameData.score;
+        let targetMap = null;
+
+        // 점수에 따른 용암 맵 선택
+        if (score >= 1000 && score < 2001) {
+            // 1000~2000점: lava map_01
+            if (this.imagesLoaded.lava1 && this.backgroundImages.lava1) {
+                targetMap = 'lava1';
+            }
+        } else if (score >= 2001 && score < 3001) {
+            // 2001~3000점: lava map_02
+            if (this.imagesLoaded.lava2 && this.backgroundImages.lava2) {
+                targetMap = 'lava2';
+            }
+        } else {
+            // 기본 용암 배경 (이미지 없을 경우)
+            targetMap = 'lavaDefault';
+        }
+
+        // 맵 전환 체크
+        if (targetMap && targetMap !== this.currentBackgroundMap) {
+            this.startBackgroundTransition(targetMap);
+        }
+
+        // 전환 중일 때 이전 배경과 새 배경을 블렌딩
+        if (this.isBackgroundTransitioning && this.previousBackgroundMap) {
+            // 이전 배경 그리기
+            this.renderLavaBackgroundByName(this.previousBackgroundMap);
+
+            // 새 배경을 투명도와 함께 그리기
+            this.ctx.globalAlpha = this.backgroundTransitionAlpha;
+            this.renderLavaBackgroundByName(this.currentBackgroundMap);
+            this.ctx.globalAlpha = 1.0;
+        } else {
+            // 일반 렌더링
+            this.renderLavaBackgroundByName(targetMap || this.currentBackgroundMap || 'lavaDefault');
+        }
+    }
+
+    // 용암 배경 이름으로 렌더링
+    renderLavaBackgroundByName(mapName) {
+        if (mapName === 'lava1' && this.backgroundImages.lava1) {
+            this.renderLavaImageBackground(this.backgroundImages.lava1);
+        } else if (mapName === 'lava2' && this.backgroundImages.lava2) {
+            this.renderLavaImageBackground(this.backgroundImages.lava2);
+        } else {
+            this.renderLavaDefaultBackground();
+        }
+    }
+
+    // 용암 이미지 배경 렌더링 (무한 스크롤)
+    renderLavaImageBackground(img) {
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+
+        // 캔버스 크기에 맞게 이미지 스케일 계산
+        const scaleY = 720 / imgHeight;
+        const scaledWidth = imgWidth * scaleY;
+
+        // 무한 스크롤을 위한 x 위치 계산
+        const scrollDistance = this.backgroundX * 0.3; // 패럴랙스 효과
+
+        // 양수로 정규화된 스크롤 위치 (모듈로 연산으로 반복)
+        const normalizedScroll = ((scrollDistance % scaledWidth) + scaledWidth) % scaledWidth;
+
+        // 첫 번째 이미지 위치 계산
+        const x1 = normalizedScroll;
+
+        // 두 번째 이미지 위치 (첫 번째 이미지 바로 다음)
+        const x2 = normalizedScroll - scaledWidth;
+
+        // 첫 번째 이미지 그리기
+        this.ctx.drawImage(
+            img,
+            x1,
+            0,
+            scaledWidth,
+            720
+        );
+
+        // 두 번째 이미지 그리기 (끊김 없는 반복을 위해)
+        this.ctx.drawImage(
+            img,
+            x2,
+            0,
+            scaledWidth,
+            720
+        );
+
+        // 세 번째 이미지 (화면이 매우 넓을 경우)
+        if (x1 > 0 || x2 + scaledWidth < 1280) {
+            this.ctx.drawImage(
+                img,
+                x2 - scaledWidth,
+                0,
+                scaledWidth,
+                720
+            );
+        }
+    }
+
+    // 기본 용암 배경 렌더링 (이미지 없을 경우)
+    renderLavaDefaultBackground() {
         // 용암 하늘 그라데이션
         const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
         gradient.addColorStop(0, '#1a0000');
@@ -608,6 +791,117 @@ class GameEngine {
 
     // 빙하 배경 렌더링
     renderIceBackground() {
+        const score = this.gameState.gameData.score;
+        let targetMap = null;
+
+        // 점수에 따른 빙하 맵 선택
+        if (score >= 3001 && score < 4001) {
+            // 3001~4000점: ice map_01
+            if (this.imagesLoaded.ice1 && this.backgroundImages.ice1) {
+                targetMap = 'ice1';
+            }
+        } else if (score >= 4001 && score < 5001) {
+            // 4001~5000점: ice map_02
+            if (this.imagesLoaded.ice2 && this.backgroundImages.ice2) {
+                targetMap = 'ice2';
+            }
+        } else if (score >= 5001) {
+            // 5001점 이상: ice map_03
+            if (this.imagesLoaded.ice3 && this.backgroundImages.ice3) {
+                targetMap = 'ice3';
+            }
+        } else {
+            // 기본 빙하 배경 (이미지 없을 경우)
+            targetMap = 'iceDefault';
+        }
+
+        // 맵 전환 체크
+        if (targetMap && targetMap !== this.currentBackgroundMap) {
+            this.startBackgroundTransition(targetMap);
+        }
+
+        // 전환 중일 때 이전 배경과 새 배경을 블렌딩
+        if (this.isBackgroundTransitioning && this.previousBackgroundMap) {
+            // 이전 배경 그리기
+            this.renderIceBackgroundByName(this.previousBackgroundMap);
+
+            // 새 배경을 투명도와 함께 그리기
+            this.ctx.globalAlpha = this.backgroundTransitionAlpha;
+            this.renderIceBackgroundByName(this.currentBackgroundMap);
+            this.ctx.globalAlpha = 1.0;
+        } else {
+            // 일반 렌더링
+            this.renderIceBackgroundByName(targetMap || this.currentBackgroundMap || 'iceDefault');
+        }
+    }
+
+    // 빙하 배경 이름으로 렌더링
+    renderIceBackgroundByName(mapName) {
+        if (mapName === 'ice1' && this.backgroundImages.ice1) {
+            this.renderIceImageBackground(this.backgroundImages.ice1);
+        } else if (mapName === 'ice2' && this.backgroundImages.ice2) {
+            this.renderIceImageBackground(this.backgroundImages.ice2);
+        } else if (mapName === 'ice3' && this.backgroundImages.ice3) {
+            this.renderIceImageBackground(this.backgroundImages.ice3);
+        } else {
+            this.renderIceDefaultBackground();
+        }
+    }
+
+    // 빙하 이미지 배경 렌더링 (느린 스크롤 - 구간당 1회)
+    renderIceImageBackground(img) {
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+
+        // 캔버스 크기에 맞게 이미지 스케일 계산
+        const scaleY = 720 / imgHeight;
+        const scaledWidth = imgWidth * scaleY;
+
+        // 매우 느린 스크롤 (구간당 한 번만 나오도록)
+        // 1000점 구간 동안 배경이 한 번만 지나가도록 속도 조절
+        const scrollDistance = this.backgroundX * 0.05; // 매우 느린 속도 (기존 0.3 → 0.05)
+
+        // 양수로 정규화된 스크롤 위치 (모듈로 연산으로 반복)
+        const normalizedScroll = ((scrollDistance % scaledWidth) + scaledWidth) % scaledWidth;
+
+        // 첫 번째 이미지 위치 계산
+        const x1 = normalizedScroll;
+
+        // 두 번째 이미지 위치 (첫 번째 이미지 바로 다음)
+        const x2 = normalizedScroll - scaledWidth;
+
+        // 첫 번째 이미지 그리기
+        this.ctx.drawImage(
+            img,
+            x1,
+            0,
+            scaledWidth,
+            720
+        );
+
+        // 두 번째 이미지 그리기 (끊김 없는 반복을 위해)
+        this.ctx.drawImage(
+            img,
+            x2,
+            0,
+            scaledWidth,
+            720
+        );
+
+        // 세 번째 이미지 (화면이 매우 넓을 경우)
+        if (x1 > 0 || x2 + scaledWidth < 1280) {
+            this.ctx.drawImage(
+                img,
+                x2 - scaledWidth,
+                0,
+                scaledWidth,
+                720
+            );
+        }
+    }
+
+    // 기본 빙하 배경 렌더링 (이미지 없을 경우)
+    renderIceDefaultBackground() {
         // 빙하 하늘 그라데이션
         const gradient = this.ctx.createLinearGradient(0, 0, 0, 720);
         gradient.addColorStop(0, '#1a1a2e');
@@ -901,7 +1195,9 @@ class GameEngine {
             `  Current: ${this.currentBackgroundMap || 'none'}`,
             `  Transitioning: ${this.isBackgroundTransitioning}`,
             `  Transition α: ${this.backgroundTransitionAlpha.toFixed(2)}`,
-            `  Loaded: ${this.imagesLoaded.grassland1 ? '1' : '-'}${this.imagesLoaded.grassland2 ? '2' : '-'}${this.imagesLoaded.grassland3 ? '3' : '-'}`,
+            `  Loaded G: ${this.imagesLoaded.grassland1 ? '1' : '-'}${this.imagesLoaded.grassland2 ? '2' : '-'}${this.imagesLoaded.grassland3 ? '3' : '-'}`,
+            `  Loaded L: ${this.imagesLoaded.lava1 ? '1' : '-'}${this.imagesLoaded.lava2 ? '2' : '-'}`,
+            `  Loaded I: ${this.imagesLoaded.ice1 ? '1' : '-'}${this.imagesLoaded.ice2 ? '2' : '-'}${this.imagesLoaded.ice3 ? '3' : '-'}`,
             '',
             'Player:',
             `  ${this.player.getDebugInfo().position}`,

@@ -77,8 +77,8 @@ class GameStateManager {
             this.triggerMapTransition('lava');
         }
 
-        // 2000점 돌파 시 빙하 맵으로 전환
-        if (prevScore < 2000 && this.gameData.score >= 2000 && this.gameData.currentMap === 'lava') {
+        // 3000점 돌파 시 빙하 맵으로 전환
+        if (prevScore < 3000 && this.gameData.score >= 3000 && this.gameData.currentMap === 'lava') {
             this.triggerMapTransition('ice');
         }
 

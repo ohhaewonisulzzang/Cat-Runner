@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nImplement scrolling background system with score-based map transitions\n\n- Add image loading system for three grassland maps (map_01, map_02, map_03)\n- Implement infinite parallax scrolling for background images\n- Add smooth fade transition effects between maps (0.5s duration)\n- Score-based map switching: 0-350 (map_01), 351-700 (map_02), 701-1000 (map_03)\n- Fix scrolling position reset on map transitions\n- Add background transition debug info\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "mcp__sequential-thinking__sequentialthinking"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
