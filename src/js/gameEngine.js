@@ -47,6 +47,21 @@ class GameEngine {
             ice3: false
         };
 
+        // 길 이미지 관련
+        this.roadImages = {
+            grassland: null,
+            lava: null,
+            ice: null
+        };
+        this.roadImagesLoaded = {
+            grassland: false,
+            lava: false,
+            ice: false
+        };
+
+        // 길 이미지 위치 배열 (미리 렌더링된 길 이미지들)
+        this.roadPositions = [];
+
         // 스코어 타이머
         this.scoreTimer = 0;
         this.scoreInterval = 100; // 0.1초마다 1점
@@ -77,13 +92,16 @@ class GameEngine {
     // 이미지 로딩
     loadImages() {
         let loadedCount = 0;
-        const totalImages = 8;
+        const totalImages = 11; // 배경 8개 + 길 3개
 
         const checkAllLoaded = () => {
             loadedCount++;
             if (loadedCount === totalImages) {
                 console.log('모든 배경 이미지 로딩 완료');
-                this.initialize();
+                // 장애물 이미지도 로드
+                ObstacleImageLoader.loadImages().then(() => {
+                    this.initialize();
+                });
             }
         };
 
@@ -198,6 +216,48 @@ class GameEngine {
             console.error('빙하 배경 3 (map_03) 로딩 실패');
             checkAllLoaded();
         };
+
+        // 초원 길 로딩
+        const grasslandRoadImg = new Image();
+        grasslandRoadImg.src = 'src/assets/images/load/glassland/load.png';
+        grasslandRoadImg.onload = () => {
+            this.roadImages.grassland = grasslandRoadImg;
+            this.roadImagesLoaded.grassland = true;
+            console.log('초원 길 로딩 완료');
+            checkAllLoaded();
+        };
+        grasslandRoadImg.onerror = () => {
+            console.error('초원 길 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 용암 길 로딩
+        const lavaRoadImg = new Image();
+        lavaRoadImg.src = 'src/assets/images/load/lava/load.png';
+        lavaRoadImg.onload = () => {
+            this.roadImages.lava = lavaRoadImg;
+            this.roadImagesLoaded.lava = true;
+            console.log('용암 길 로딩 완료');
+            checkAllLoaded();
+        };
+        lavaRoadImg.onerror = () => {
+            console.error('용암 길 로딩 실패');
+            checkAllLoaded();
+        };
+
+        // 빙하 길 로딩 (없으면 기본 렌더링)
+        const iceRoadImg = new Image();
+        iceRoadImg.src = 'src/assets/images/load/ice/load.png';
+        iceRoadImg.onload = () => {
+            this.roadImages.ice = iceRoadImg;
+            this.roadImagesLoaded.ice = true;
+            console.log('빙하 길 로딩 완료');
+            checkAllLoaded();
+        };
+        iceRoadImg.onerror = () => {
+            console.log('빙하 길 이미지 없음 - 건너뜀');
+            checkAllLoaded();
+        };
     }
 
     // 초기화
@@ -246,6 +306,9 @@ class GameEngine {
             }
         });
         
+        // 길 위치 초기화
+        this.initializeRoadPositions();
+
         // 게임 루프 시작
         this.start();
     }
@@ -348,8 +411,41 @@ class GameEngine {
         this.backgroundX = 0;
         this.groundX = 0;
         this.scoreTimer = 0;
+        this.roadPositions = []; // 길 위치 초기화
+        this.initializeRoadPositions(); // 길 위치 재설정
         this.gameState.resetGame();
         console.log('게임 리셋 완료');
+    }
+
+    // 길 위치 초기화 (게임 시작 시)
+    initializeRoadPositions() {
+        const currentMap = this.gameState.gameData.currentMap;
+        let roadImage = null;
+
+        // 맵에 따른 길 이미지 선택
+        if (currentMap === 'lava' && this.roadImagesLoaded.lava) {
+            roadImage = this.roadImages.lava;
+        } else if (currentMap === 'ice' && this.roadImagesLoaded.ice) {
+            roadImage = this.roadImages.ice;
+        } else if (this.roadImagesLoaded.grassland) {
+            roadImage = this.roadImages.grassland;
+        }
+
+        if (roadImage) {
+            // 길 이미지 크기를 캔버스 너비(1280)로 고정
+            const roadWidth = 1280;
+            const roadHeight = 300; // 높이 증가 (100 → 200)
+
+            // 화면을 채우기 위한 개수 계산 (여유있게 3개)
+            this.roadPositions = [];
+            for (let i = 0; i < 3; i++) {
+                this.roadPositions.push({
+                    x: i * roadWidth,
+                    width: roadWidth,
+                    height: roadHeight
+                });
+            }
+        }
     }
     
     // 메인 게임 루프
@@ -468,16 +564,19 @@ class GameEngine {
     render() {
         // 캔버스 클리어
         this.ctx.clearRect(0, 0, 1280, 720);
-        
+
         // 배경 렌더링
         this.renderBackground();
-        
+
+        // 길 렌더링 (캔버스 하단)
+        this.renderRoad();
+
         if (this.gameState.isState('playing') || this.gameState.isState('paused')) {
             // 게임 객체 렌더링
             this.obstacleManager.render(this.ctx);
             this.player.render(this.ctx, this.debugMode);
         }
-        
+
         // 디버그 정보 렌더링
         if (this.debugMode) {
             this.renderDebugInfo();
@@ -1176,7 +1275,62 @@ class GameEngine {
         this.ctx.fillStyle = gradient2;
         this.ctx.fillRect(0, 150, 1280, 200);
     }
-    
+
+    // 길 렌더링 (캔버스 하단)
+    renderRoad() {
+        if (this.roadPositions.length === 0) return;
+
+        const currentMap = this.gameState.gameData.currentMap;
+        let roadImage = null;
+
+        // 맵에 따른 길 이미지 선택
+        if (currentMap === 'lava' && this.roadImagesLoaded.lava) {
+            roadImage = this.roadImages.lava;
+        } else if (currentMap === 'ice' && this.roadImagesLoaded.ice) {
+            roadImage = this.roadImages.ice;
+        } else if (this.roadImagesLoaded.grassland) {
+            roadImage = this.roadImages.grassland;
+        }
+
+        if (!roadImage) return;
+
+        // 게임 플레이 중일 때만 위치 업데이트
+        if (this.gameState.isState('playing')) {
+            const gameSpeed = this.gameState.gameData.gameSpeed;
+
+            // 모든 길 이미지의 x 좌표를 게임 속도만큼 감소 (왼쪽으로 이동)
+            this.roadPositions.forEach(road => {
+                road.x -= gameSpeed;
+            });
+
+            // 첫 번째 길 이미지가 화면 밖으로 완전히 나갔으면 배열 끝으로 이동
+            if (this.roadPositions[0].x + this.roadPositions[0].width < 0) {
+                const firstRoad = this.roadPositions.shift();
+                // 마지막 길의 오른쪽에 배치
+                const lastRoad = this.roadPositions[this.roadPositions.length - 1];
+                firstRoad.x = lastRoad.x + lastRoad.width;
+                this.roadPositions.push(firstRoad);
+            }
+        }
+
+        // 길 이미지 Y 위치 (하단 변이 캔버스 하단과 동일)
+        const roadY = 720 - this.roadPositions[0].height;
+
+        // 모든 길 이미지 렌더링
+        this.roadPositions.forEach(road => {
+            // 화면에 보이는 길만 렌더링
+            if (road.x + road.width > 0 && road.x < 1280) {
+                this.ctx.drawImage(
+                    roadImage,
+                    road.x,
+                    roadY,
+                    road.width,
+                    road.height
+                );
+            }
+        });
+    }
+
     // 디버그 정보 렌더링
     renderDebugInfo() {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';

@@ -1,3 +1,130 @@
+// 장애물 이미지 로딩 시스템
+class ObstacleImageLoader {
+    static images = {
+        ground: {
+            small: [],
+            medium: [],
+            large: []
+        },
+        air: {
+            small: [],
+            medium: [],
+            large: []
+        }
+    };
+
+    static loaded = false;
+    static loading = false;
+
+    static async loadImages() {
+        if (this.loaded || this.loading) return;
+
+        this.loading = true;
+        console.log('장애물 이미지 로딩 시작...');
+
+        try {
+            // Ground 장애물 로드
+            // ground small 이미지 로드 (4개)
+            for (let i = 1; i <= 4; i++) {
+                const img = new Image();
+                img.src = `./src/assets/images/obstacles/glassland/ground/small/small_0${i}.png`;
+                await this.loadImage(img);
+                this.images.ground.small.push(img);
+            }
+
+            // ground medium 이미지 로드 (4개)
+            for (let i = 1; i <= 4; i++) {
+                const img = new Image();
+                img.src = `./src/assets/images/obstacles/glassland/ground/medium/medium_0${i}.png`;
+                await this.loadImage(img);
+                this.images.ground.medium.push(img);
+            }
+
+            // ground large 이미지 로드 (6개)
+            for (let i = 1; i <= 6; i++) {
+                const img = new Image();
+                img.src = `./src/assets/images/obstacles/glassland/ground/large/large_0${i}.png`;
+                await this.loadImage(img);
+                this.images.ground.large.push(img);
+            }
+
+            // Air 장애물 로드 (파일이 있는 경우에만)
+            // air small 이미지 로드 시도
+            try {
+                for (let i = 1; i <= 4; i++) {
+                    const img = new Image();
+                    img.src = `./src/assets/images/obstacles/glassland/air/small/small_0${i}.png`;
+                    await this.loadImage(img);
+                    this.images.air.small.push(img);
+                }
+            } catch (e) {
+                console.log('Air small 이미지 없음 - 기본 렌더링 사용');
+            }
+
+            // air medium 이미지 로드 시도
+            try {
+                for (let i = 1; i <= 4; i++) {
+                    const img = new Image();
+                    img.src = `./src/assets/images/obstacles/glassland/air/medium/medium_0${i}.png`;
+                    await this.loadImage(img);
+                    this.images.air.medium.push(img);
+                }
+            } catch (e) {
+                console.log('Air medium 이미지 없음 - 기본 렌더링 사용');
+            }
+
+            // air large 이미지 로드 시도
+            try {
+                for (let i = 1; i <= 6; i++) {
+                    const img = new Image();
+                    img.src = `./src/assets/images/obstacles/glassland/air/large/large_0${i}.png`;
+                    await this.loadImage(img);
+                    this.images.air.large.push(img);
+                }
+            } catch (e) {
+                console.log('Air large 이미지 없음 - 기본 렌더링 사용');
+            }
+
+            this.loaded = true;
+            this.loading = false;
+            console.log('장애물 이미지 로딩 완료!', {
+                ground: {
+                    small: this.images.ground.small.length,
+                    medium: this.images.ground.medium.length,
+                    large: this.images.ground.large.length
+                },
+                air: {
+                    small: this.images.air.small.length,
+                    medium: this.images.air.medium.length,
+                    large: this.images.air.large.length
+                }
+            });
+        } catch (error) {
+            console.error('장애물 이미지 로딩 실패:', error);
+            this.loading = false;
+        }
+    }
+
+    static loadImage(img) {
+        return new Promise((resolve, reject) => {
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`이미지 로드 실패: ${img.src}`));
+        });
+    }
+
+    static getRandomImage(type, size) {
+        const images = this.images[type]?.[size];
+
+        if (!images || images.length === 0) {
+            console.warn(`${type}/${size} 이미지가 로드되지 않음 - 기본 렌더링 사용`);
+            return null;
+        }
+
+        const randomIndex = Math.floor(Math.random() * images.length);
+        return images[randomIndex];
+    }
+}
+
 // 장애물 클래스
 class Obstacle {
     constructor(x, y, type, size) {
@@ -5,14 +132,17 @@ class Obstacle {
         this.y = y;
         this.type = type; // 'ground' 또는 'air'
         this.size = size; // 'small', 'medium', 'large'
-        
+
         // 크기 설정
         this.setSizeProperties();
-        
+
+        // 랜덤 이미지 선택 (타입과 크기에 따라)
+        this.image = ObstacleImageLoader.getRandomImage(this.type, this.size);
+
         // 상태
         this.active = true;
         this.passed = false;
-        
+
         // 애니메이션 (선택사항)
         this.animationFrame = 0;
         this.animationSpeed = 0.05;
@@ -22,8 +152,8 @@ class Obstacle {
     setSizeProperties() {
         switch (this.size) {
             case 'small':
-                this.width = 30;
-                this.height = 30;
+                this.width = 45;
+                this.height = 45;
                 break;
             case 'medium':
                 this.width = 50;
@@ -37,18 +167,24 @@ class Obstacle {
                 this.width = 50;
                 this.height = 50;
         }
-        
-        // 상단 장애물의 Y 위치 조정
+
+        // Ground 장애물의 Y 위치 조정 (플레이어 히트박스 아래 변과 동일)
+        if (this.type === 'ground') {
+            // 플레이어 히트박스 아래 변 Y = 695
+            this.y = 695 - this.height;
+        }
+
+        // Air 장애물의 Y 위치 조정 (살짝 아래로 이동)
         if (this.type === 'air') {
             switch (this.size) {
                 case 'small':
-                    this.y = 480; // 점프로 닿을 수 있는 높이
+                    this.y = 530; // 점프로 닿을 수 있는 높이 (480 → 530)
                     break;
                 case 'medium':
-                    this.y = 420; // 중간 점프 높이
+                    this.y = 470; // 중간 점프 높이 (420 → 470)
                     break;
                 case 'large':
-                    this.y = 380; // 높은 점프 필요
+                    this.y = 430; // 높은 점프 필요 (380 → 430)
                     break;
             }
         }
@@ -73,17 +209,33 @@ class Obstacle {
     // 렌더링
     render(ctx) {
         if (!this.active) return;
-        
+
         ctx.save();
-        
-        // 장애물 색상 설정
-        if (this.type === 'ground') {
-            this.renderGroundObstacle(ctx);
+
+        // 이미지가 있으면 이미지 렌더링, 없으면 기본 도형 렌더링
+        if (this.image && ObstacleImageLoader.loaded) {
+            this.renderImage(ctx);
         } else {
-            this.renderAirObstacle(ctx);
+            // 장애물 색상 설정
+            if (this.type === 'ground') {
+                this.renderGroundObstacle(ctx);
+            } else {
+                this.renderAirObstacle(ctx);
+            }
         }
-        
+
         ctx.restore();
+    }
+
+    // 이미지 렌더링
+    renderImage(ctx) {
+        ctx.drawImage(
+            this.image,
+            this.x,
+            this.y,
+            this.width,
+            this.height
+        );
     }
     
     // 지면 장애물 렌더링
