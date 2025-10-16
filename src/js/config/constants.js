@@ -197,8 +197,8 @@ export const STORAGE_KEYS = {
 // 이미지 경로
 export const IMAGE_PATHS = {
     PLAYER: {
-        RUN: (index) => `src/assets/images/player/cat_run_${index}.png`,
-        JUMP: 'src/assets/images/player/cat_jump.png'
+        RUN: (index) => `src/assets/images/player/cat/cat_run_${index}.png`,
+        JUMP: 'src/assets/images/player/cat/cat_jump.png'
     },
 
     BACKGROUND: {
