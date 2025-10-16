@@ -10,6 +10,7 @@ export class ObstacleImageLoader {
         air: { small: [], medium: [], large: [] }
     };
 
+    static waterBottleImage = null;
     static loaded = false;
     static loading = false;
 
@@ -35,6 +36,19 @@ export class ObstacleImageLoader {
                 const img = await ImageLoader.loadImageSafe(IMAGE_PATHS.OBSTACLES.GRASSLAND.GROUND.LARGE(i));
                 if (img) this.images.ground.large.push(img);
             }
+
+            // Air obstacles
+            const airSmallImg = await ImageLoader.loadImageSafe(IMAGE_PATHS.OBSTACLES.GRASSLAND.AIR.SMALL);
+            if (airSmallImg) this.images.air.small.push(airSmallImg);
+
+            const airMediumImg = await ImageLoader.loadImageSafe(IMAGE_PATHS.OBSTACLES.GRASSLAND.AIR.MEDIUM);
+            if (airMediumImg) this.images.air.medium.push(airMediumImg);
+
+            const airLargeImg = await ImageLoader.loadImageSafe(IMAGE_PATHS.OBSTACLES.GRASSLAND.AIR.LARGE);
+            if (airLargeImg) this.images.air.large.push(airLargeImg);
+
+            // Water bottle image
+            this.waterBottleImage = await ImageLoader.loadImageSafe(IMAGE_PATHS.ITEMS.WATER_BOTTLE);
 
             this.loaded = true;
             this.loading = false;
@@ -172,30 +186,20 @@ export class WaterItem {
 
         ctx.save();
 
-        const centerX = this.x + this.width / 2;
-        const centerY = this.y + this.height / 2;
+        // 물병 이미지 또는 플레이스홀더
+        if (ObstacleImageLoader.waterBottleImage && ObstacleImageLoader.loaded) {
+            ctx.drawImage(ObstacleImageLoader.waterBottleImage, this.x, this.y, this.width, this.height);
+        } else {
+            // 플레이스홀더 (이미지 로딩 전)
+            ctx.fillStyle = '#4FC3F7';
+            ctx.fillRect(this.x + 10, this.y + 8, 20, 24);
 
-        // 반짝이는 효과
-        const glowRadius = this.width / 2 + Math.sin(this.animationFrame * 3) * 3;
-        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, glowRadius);
-        gradient.addColorStop(0, 'rgba(100, 200, 255, 0.8)');
-        gradient.addColorStop(0.5, 'rgba(100, 200, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+            ctx.fillStyle = '#0288D1';
+            ctx.fillRect(this.x + 12, this.y + 5, 16, 5);
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 물병 본체
-        ctx.fillStyle = '#4FC3F7';
-        ctx.fillRect(this.x + 10, this.y + 8, 20, 24);
-
-        ctx.fillStyle = '#0288D1';
-        ctx.fillRect(this.x + 12, this.y + 5, 16, 5);
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.fillRect(this.x + 12, this.y + 10, 6, 15);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillRect(this.x + 12, this.y + 10, 6, 15);
+        }
 
         ctx.restore();
     }

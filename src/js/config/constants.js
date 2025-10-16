@@ -112,8 +112,8 @@ export const GAME_CONSTANTS = {
 
     // 물 아이템 설정
     WATER_ITEM: {
-        WIDTH: 40,
-        HEIGHT: 40,
+        WIDTH: 80,
+        HEIGHT: 80,
         SPAWN_INTERVAL: { MIN: 5000, MAX: 8000 },
         MAX_ACTIVE: 2,
         RECOVERY_AMOUNT: 25,
@@ -232,10 +232,14 @@ export const IMAGE_PATHS = {
                 LARGE: (index) => `./src/assets/images/obstacles/glassland/ground/large/large_0${index}.png`
             },
             AIR: {
-                SMALL: (index) => `./src/assets/images/obstacles/glassland/air/small/small_0${index}.png`,
-                MEDIUM: (index) => `./src/assets/images/obstacles/glassland/air/medium/medium_0${index}.png`,
-                LARGE: (index) => `./src/assets/images/obstacles/glassland/air/large/large_0${index}.png`
+                SMALL: './src/assets/images/obstacles/glassland/air/small/small_03.png',
+                MEDIUM: './src/assets/images/obstacles/glassland/air/medium/medium_02.png',
+                LARGE: './src/assets/images/obstacles/glassland/air/large/large_01.png'
             }
         }
+    },
+
+    ITEMS: {
+        WATER_BOTTLE: 'src/assets/images/icons/waterbottle.png'
     }
 };
