@@ -111,7 +111,7 @@ export class Obstacle {
         }
     }
 
-    render(ctx) {
+    render(ctx, debugMode = false) {
         if (!this.active) return;
 
         ctx.save();
@@ -120,6 +120,25 @@ export class Obstacle {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         } else {
             this.renderPlaceholder(ctx);
+        }
+
+        // 디버그 모드: 히트박스 표시
+        if (debugMode) {
+            const bounds = this.getBounds();
+
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+            // 장애물 타입 표시
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+            // 장애물 정보 텍스트
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText(`${this.type}`, bounds.x + 5, bounds.y + 15);
+            ctx.fillText(`${this.size}`, bounds.x + 5, bounds.y + 30);
         }
 
         ctx.restore();
@@ -134,21 +153,33 @@ export class Obstacle {
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 
-    getBounds() {
-        return {
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height
-        };
-    }
-
     checkPassed(playerX) {
         if (!this.passed && this.x + this.width < playerX) {
             this.passed = true;
             return true;
         }
         return false;
+    }
+
+    getBounds() {
+        // LARGE 사이즈 장애물은 히트박스를 약간 줄임
+        if (this.size === GAME_CONSTANTS.OBSTACLE.SIZES.LARGE) {
+            const sidePadding = 12; // 좌우 각 12픽셀씩 줄임
+            const bottomPadding = 12; // 아래쪽만 12픽셀 줄임
+            return {
+                x: this.x + sidePadding,
+                y: this.y, // 위쪽은 그대로 유지
+                width: this.width - (sidePadding * 2),
+                height: this.height - bottomPadding
+            };
+        }
+
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        };
     }
 
     getScoreValue() {
@@ -181,7 +212,7 @@ export class WaterItem {
         }
     }
 
-    render(ctx) {
+    render(ctx, debugMode = false) {
         if (!this.active || this.collected) return;
 
         ctx.save();
@@ -199,6 +230,22 @@ export class WaterItem {
 
             ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.fillRect(this.x + 12, this.y + 10, 6, 15);
+        }
+
+        // 디버그 모드: 히트박스 표시
+        if (debugMode) {
+            ctx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+            // 물 아이템 표시
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+
+            // 물 아이템 정보 텍스트
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText('WATER', this.x + 5, this.y + 15);
         }
 
         ctx.restore();

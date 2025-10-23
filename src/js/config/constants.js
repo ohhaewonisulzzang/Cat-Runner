@@ -85,15 +85,15 @@ export const GAME_CONSTANTS = {
         },
 
         DIMENSIONS: {
-            SMALL: { width: 45, height: 45 },
-            MEDIUM: { width: 50, height: 50 },
-            LARGE: { width: 70, height: 70 }
+            SMALL: { width: 60, height: 60 },
+            MEDIUM: { width: 75, height: 75 },
+            LARGE: { width: 95, height: 95 }
         },
 
         AIR_POSITIONS: {
-            SMALL: 530,
-            MEDIUM: 470,
-            LARGE: 430
+            SMALL: 520,
+            MEDIUM: 450,
+            LARGE: 400
         },
 
         GROUND_Y: 695,
@@ -242,4 +242,10 @@ export const IMAGE_PATHS = {
     ITEMS: {
         WATER_BOTTLE: 'src/assets/images/icons/waterbottle.png'
     }
+};
+
+// 오디오 경로
+export const AUDIO_PATHS = {
+    BGM: 'src/assets/sounds/bgm.mp3',
+    JUMP: 'src/assets/sounds/jump.mp3'
 };

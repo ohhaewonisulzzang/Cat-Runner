@@ -302,7 +302,7 @@ export class GameEngine {
         this.renderRoad();
 
         if (this.gameState.isState('playing') || this.gameState.isState('paused')) {
-            this.obstacleManager.render(this.ctx);
+            this.obstacleManager.render(this.ctx, this.debugMode);
             this.player.render(this.ctx, this.debugMode);
         }
 

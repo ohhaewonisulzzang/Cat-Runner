@@ -43,10 +43,16 @@ export class ObstacleManager {
         // 장애물 생성
         this.spawnTimer += deltaTime;
         const difficulty = this.gameState.gameData.difficultyLevel;
-        this.spawnInterval = Math.max(
+
+        // 기본 간격 계산
+        const baseInterval = Math.max(
             GAME_CONSTANTS.OBSTACLE.MIN_SPAWN_INTERVAL,
             1200 - (difficulty * 80)
         );
+
+        // 게임 속도에 비례해서 간격 조정 (속도가 빠를수록 간격을 더 넓힘)
+        const speedMultiplier = gameSpeed / GAME_CONSTANTS.DIFFICULTY.INITIAL_SPEED;
+        this.spawnInterval = baseInterval * Math.max(1, speedMultiplier * 0.85);
 
         if (this.spawnTimer >= this.spawnInterval) {
             this.spawnObstacle();
@@ -183,9 +189,9 @@ export class ObstacleManager {
         return passedCount;
     }
 
-    render(ctx) {
-        this.obstacles.forEach(obstacle => obstacle.render(ctx));
-        this.waterItems.forEach(waterItem => waterItem.render(ctx));
+    render(ctx, debugMode = false) {
+        this.obstacles.forEach(obstacle => obstacle.render(ctx, debugMode));
+        this.waterItems.forEach(waterItem => waterItem.render(ctx, debugMode));
     }
 
     reset() {

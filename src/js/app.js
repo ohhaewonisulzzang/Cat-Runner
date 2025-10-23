@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Cat Runner 게임이 준비되었습니다!');
         console.log('조작법:');
         console.log('- 스페이스바: 점프 (누르는 시간에 따라 높이 조절)');
-        console.log('- ESC: 일시정지/재개');
         console.log('- ` (백틱): 디버그 모드 토글');
         console.log('- F12: 테스트 모드 토글');
 
@@ -99,13 +98,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 페이지 가시성 변경 시 처리
-    document.addEventListener('visibilitychange', function() {
-        if (gameEngine && gameEngine.gameState) {
-            if (document.hidden && gameEngine.gameState.isState('playing')) {
-                gameEngine.gameState.setState('paused');
-            }
-        }
-    });
+    // 일시정지 기능 제거: 페이지가 숨겨져도 게임 계속 진행
+    // document.addEventListener('visibilitychange', function() {
+    //     if (gameEngine && gameEngine.gameState) {
+    //         if (document.hidden && gameEngine.gameState.isState('playing')) {
+    //             gameEngine.gameState.setState('paused');
+    //         }
+    //     }
+    // });
 
     // 터치 디바이스 감지
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {

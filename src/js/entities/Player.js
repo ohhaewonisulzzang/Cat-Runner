@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS, IMAGE_PATHS, KEY_CODES } from '../config/constants.js';
+import { GAME_CONSTANTS, IMAGE_PATHS, KEY_CODES, AUDIO_PATHS } from '../config/constants.js';
 import { ImageLoader } from '../utils/imageLoader.js';
 
 /**
@@ -44,6 +44,10 @@ export class Player {
             jump: null
         };
         this.imagesLoaded = false;
+
+        // 점프 효과음
+        this.jumpSound = new Audio(AUDIO_PATHS.JUMP);
+        this.jumpSound.volume = 0.5; // 볼륨 50%
 
         this.loadImages();
         this.initializeControls();
@@ -132,7 +136,15 @@ export class Player {
         this.jumpHoldTime = 0;
 
         if (this.gameState.gameData.sfxEnabled) {
-            // TODO: 점프 사운드 재생
+            try {
+                // 1초부터 재생
+                this.jumpSound.currentTime = 1.0;
+                this.jumpSound.play().catch(err => {
+                    console.log('점프 효과음 재생 실패:', err);
+                });
+            } catch (error) {
+                console.error('점프 효과음 재생 오류:', error);
+            }
         }
     }
 

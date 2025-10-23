@@ -6,27 +6,26 @@
 }
 
 body {
-    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
-    background: linear-gradient(to bottom, #87CEEB 0%, #FFE5B4 100%);
+    font-family: 'Noto Sans KR', 'Press Start 2P', sans-serif;
+    font-weight: 900;
+    background: #2b2b2b;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
     height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     overflow: hidden;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 /* 게임 컨테이너 */
 #gameContainer {
     position: relative;
-    width: 1280px;
-    height: 720px;
-    max-width: 98vw;
-    max-height: 98vh;
-    border: 3px solid #333;
-    border-radius: 10px;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     background: #87CEEB;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* 메인 캔버스 */
@@ -60,17 +59,20 @@ body {
 }
 
 #highScore, #currentScore {
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-size: 18px;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    background: #000;
+    color: #fff;
+    padding: 12px 16px;
+    border: 4px solid #fff;
+    box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.5);
+    font-size: 14px;
+    letter-spacing: 1px;
 }
 
 #currentScore {
-    background: rgba(255, 107, 107, 0.9);
+    background: #fff;
+    border-color: #000;
+    color: #000;
+    box-shadow: 4px 4px 0 0 #000;
 }
 
 /* 화면 공통 스타일 */
@@ -79,14 +81,16 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.95);
-    padding: 40px;
-    border-radius: 20px;
+    background: #000;
+    padding: 30px;
+    border: 6px solid #fff;
+    box-shadow:
+        0 0 0 2px #000,
+        8px 8px 0 0 #444;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     pointer-events: none;
     min-width: 400px;
 }
@@ -99,48 +103,68 @@ body {
 
 /* 메뉴 화면 */
 #menuScreen h1 {
-    font-size: 48px;
-    color: #FF6B6B;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 32px;
+    color: #fff;
     margin-bottom: 20px;
-    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+    text-shadow: 4px 4px 0 #000;
+    letter-spacing: 4px;
+    line-height: 1.5;
+    text-transform: uppercase;
 }
 
 #menuScreen p {
-    font-size: 18px;
-    color: #333;
+    font-size: 13px;
+    color: #fff;
     margin-bottom: 30px;
+    letter-spacing: 0.5px;
 }
 
 /* 게임 오버 화면 */
 #gameOverScreen h2 {
-    font-size: 36px;
-    color: #FF6B6B;
+    font-size: 32px;
+    color: #fff;
     margin-bottom: 20px;
+    text-shadow: 4px 4px 0 #000;
+    letter-spacing: 2px;
+}
+
+#gameOverScreen p {
+    font-size: 11px;
+    color: #aaa;
+    margin: 20px 0 10px 0;
 }
 
 #finalScore, #bestScore, #obstacleCount {
-    font-size: 20px;
-    margin: 10px 0;
-    color: #333;
+    font-size: 15px;
+    margin: 12px 0;
+    color: #fff;
+    letter-spacing: 0.5px;
 }
 
 #bestScore {
-    color: #FFD700;
-    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
 }
 
 /* 일시정지 화면 */
+#pauseScreen {
+    display: none !important;
+}
+
 #pauseScreen h2 {
-    font-size: 32px;
-    color: #333;
+    font-size: 28px;
+    color: #fff;
     margin-bottom: 30px;
+    letter-spacing: 1px;
 }
 
 /* 설정 화면 */
 #settingsScreen h2 {
-    font-size: 28px;
-    color: #333;
+    font-size: 24px;
+    color: #fff;
     margin-bottom: 30px;
+    letter-spacing: 1px;
 }
 
 .setting-item {
@@ -151,49 +175,47 @@ body {
 .setting-item label {
     display: flex;
     align-items: center;
-    font-size: 18px;
-    color: #333;
+    font-size: 14px;
+    color: #fff;
     cursor: pointer;
+    letter-spacing: 0.5px;
 }
 
 .setting-item input[type="checkbox"] {
     margin-right: 10px;
-    transform: scale(1.2);
+    transform: scale(1.5);
+    cursor: pointer;
 }
 
-/* 버튼 스타일 */
+/* 버튼 스타일 - 모두 동일한 호버링 */
 button {
-    background: #FF6B6B;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    margin: 10px;
-    border-radius: 25px;
-    font-size: 18px;
-    font-weight: bold;
+    font-family: 'Noto Sans KR', 'Press Start 2P', sans-serif;
+    font-weight: 900;
+    background: #000;
+    color: #fff;
+    border: 4px solid #fff;
+    padding: 12px 24px;
+    margin: 8px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    transition: all 0.1s ease;
+    box-shadow: 4px 4px 0 0 #fff;
     pointer-events: auto;
+    position: relative;
 }
 
 button:hover {
-    background: #FF5252;
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    background: #fff;
+    color: #000;
+    border-color: #000;
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 #000;
 }
 
 button:active {
-    transform: translateY(0) scale(0.98);
-}
-
-/* 보조 버튼 스타일 */
-#settingsBtn, #mainMenuBtn, #backToMenuBtn, #closeSettingsBtn {
-    background: #4ECDC4;
-}
-
-#settingsBtn:hover, #mainMenuBtn:hover, #backToMenuBtn:hover, #closeSettingsBtn:hover {
-    background: #26A69A;
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 #fff;
 }
 
 /* 컨트롤 안내 */
@@ -202,14 +224,16 @@ button:active {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
+    background: #000;
+    color: #fff;
     padding: 10px 20px;
-    border-radius: 15px;
-    font-size: 14px;
+    border: 3px solid #fff;
+    box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    letter-spacing: 0.5px;
     pointer-events: none;
     opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease;
     z-index: 5;
 }
 
@@ -219,41 +243,29 @@ body.playing #controls {
 }
 
 /* 반응형 디자인 */
-@media (max-width: 1400px) {
-    #gameContainer {
-        width: 95vw;
-        height: 53.4375vw; /* 16:9 비율 유지 */
-    }
-}
-
 @media (max-width: 800px) {
-    #gameContainer {
-        width: 98vw;
-        height: 55.125vw;
-        border-width: 2px;
-    }
-    
     .screen {
         min-width: 300px;
         padding: 30px 20px;
     }
-    
+
     #menuScreen h1 {
-        font-size: 36px;
+        font-size: 24px;
+        letter-spacing: 2px;
     }
-    
+
     button {
-        padding: 12px 24px;
-        font-size: 16px;
+        padding: 10px 20px;
+        font-size: 11px;
     }
-    
+
     #scoreBoard {
         padding: 0 20px;
     }
-    
+
     #highScore, #currentScore {
-        font-size: 14px;
-        padding: 8px 16px;
+        font-size: 12px;
+        padding: 8px 12px;
     }
 }
 
@@ -264,10 +276,10 @@ body.playing #controls {
 
 @keyframes glow {
     from {
-        text-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700, 0 0 15px #FFD700;
+        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 2px 2px 0 #000;
     }
     to {
-        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700;
+        text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff, 2px 2px 0 #000;
     }
 }
 
@@ -284,8 +296,8 @@ body.playing #controls {
     transform: translate(-50%, -50%);
     width: 30px;
     height: 30px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #FF6B6B;
+    border: 3px solid #333;
+    border-top: 3px solid #fff;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -305,7 +317,7 @@ body.playing #controls {
     z-index: 10;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.3s ease;
 }
 
 /* 용암 맵에서만 표시 */
@@ -315,28 +327,29 @@ body.lava-map .heat-gauge {
 }
 
 .heat-gauge-label {
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
+    color: #fff;
+    font-size: 10px;
+    letter-spacing: 1px;
     margin-bottom: 5px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    text-shadow: 2px 2px 0 #000;
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
 .water-icon {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     vertical-align: middle;
+    image-rendering: pixelated;
 }
 
 .heat-gauge-container {
     position: relative;
-    background: rgba(0, 0, 0, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 15px;
-    height: 25px;
+    background: #000;
+    border: 3px solid #fff;
+    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.5);
+    height: 24px;
     overflow: hidden;
 }
 
@@ -346,9 +359,8 @@ body.lava-map .heat-gauge {
     top: 0;
     height: 100%;
     width: 100%;
-    background: linear-gradient(90deg, #ffa500 0%, #ff6b35 100%);
-    border-radius: 13px;
-    transition: width 0.3s ease, background 0.3s ease;
+    background: #fff;
+    transition: width 0.2s ease, background 0.2s ease;
 }
 
 /* 게이지 깜빡임 효과 (50% 이하) */
@@ -363,13 +375,13 @@ body.lava-map .heat-gauge {
 
 .heat-gauge-value {
     position: absolute;
-    right: 10px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 #000;
     z-index: 1;
 }
 

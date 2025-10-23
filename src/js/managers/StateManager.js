@@ -1,4 +1,5 @@
 import { GAME_CONSTANTS, STORAGE_KEYS, KEY_CODES } from '../config/constants.js';
+import { AudioManager } from './AudioManager.js';
 
 /**
  * 게임 상태 관리 시스템
@@ -28,6 +29,10 @@ export class GameStateManager {
         // 상태 변경 콜백들
         this.stateChangeCallbacks = {};
 
+        // 오디오 매니저
+        this.audioManager = new AudioManager();
+        this.audioManager.toggleMute(!this.gameData.soundEnabled);
+
         this.initializeUI();
     }
 
@@ -42,6 +47,11 @@ export class GameStateManager {
 
         if (newState === 'playing') {
             this.updateMapClass();
+            // 게임 플레이 시작 시 BGM 재생
+            this.audioManager.playBGM();
+        } else {
+            // 게임 플레이 중이 아닐 때 BGM 일시정지
+            this.audioManager.pauseBGM();
         }
 
         if (this.stateChangeCallbacks[newState]) {
@@ -200,13 +210,13 @@ export class GameStateManager {
             heatBar.classList.remove('warning', 'critical');
 
             if (this.gameData.heatGauge <= GAME_CONSTANTS.HEAT_GAUGE.CRITICAL_THRESHOLD) {
-                heatBar.style.background = '#ff4444';
+                heatBar.style.background = '#666';
                 heatBar.classList.add('critical');
             } else if (this.gameData.heatGauge <= GAME_CONSTANTS.HEAT_GAUGE.WARNING_THRESHOLD) {
-                heatBar.style.background = 'linear-gradient(90deg, #ff6b35 0%, #ff4444 100%)';
+                heatBar.style.background = '#999';
                 heatBar.classList.add('warning');
             } else {
-                heatBar.style.background = 'linear-gradient(90deg, #ffa500 0%, #ff6b35 100%)';
+                heatBar.style.background = '#fff';
             }
         }
     }
@@ -262,12 +272,7 @@ export class GameStateManager {
             this.setState(this.states.MENU);
         });
 
-        document.getElementById('gameOverScreen').addEventListener('click', (e) => {
-            if (e.target.id !== 'backToMenuBtn') {
-                this.resetGame();
-                this.setState(this.states.PLAYING);
-            }
-        });
+        // 게임 오버 화면 클릭 시 재시작 기능 제거 (버튼만 사용)
 
         document.getElementById('backToMenuBtn').addEventListener('click', () => {
             this.setState(this.states.MENU);
@@ -280,6 +285,11 @@ export class GameStateManager {
         document.getElementById('soundToggle').addEventListener('change', (e) => {
             this.gameData.soundEnabled = e.target.checked;
             this.saveSetting('soundEnabled', e.target.checked);
+            // 사운드 설정 변경 시 BGM 제어
+            this.audioManager.toggleMute(!e.target.checked);
+            if (e.target.checked && this.currentState === this.states.PLAYING) {
+                this.audioManager.playBGM();
+            }
         });
 
         document.getElementById('sfxToggle').addEventListener('change', (e) => {
@@ -350,11 +360,8 @@ export class GameStateManager {
     handleKeyDown(e) {
         switch (e.code) {
             case KEY_CODES.ESCAPE:
-                if (this.currentState === this.states.PLAYING) {
-                    this.setState(this.states.PAUSED);
-                } else if (this.currentState === this.states.PAUSED) {
-                    this.setState(this.states.PLAYING);
-                } else if (this.currentState === this.states.SETTINGS) {
+                // ESC 키는 설정 화면 닫기에만 사용
+                if (this.currentState === this.states.SETTINGS) {
                     this.setState(this.previousState || this.states.MENU);
                 }
                 break;
@@ -363,10 +370,8 @@ export class GameStateManager {
                 e.preventDefault();
                 if (this.currentState === this.states.MENU) {
                     this.setState(this.states.PLAYING);
-                } else if (this.currentState === this.states.GAME_OVER) {
-                    this.resetGame();
-                    this.setState(this.states.PLAYING);
                 }
+                // 게임 오버 시 스페이스바 비활성화 (메인 메뉴 버튼만 사용)
                 break;
 
             case KEY_CODES.ENTER:
