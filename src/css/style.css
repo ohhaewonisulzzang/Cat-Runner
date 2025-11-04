@@ -3,11 +3,15 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 body {
     font-family: 'Noto Sans KR', 'Press Start 2P', sans-serif;
-    font-weight: 900;
+    font-weight: 700;
     background: #2b2b2b;
     margin: 0;
     padding: 0;
@@ -34,6 +38,10 @@ body {
     width: 100%;
     height: 100%;
     background: linear-gradient(to bottom, #87CEEB 60%, #90EE90 60%, #8FBC8F 100%);
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
 }
 
 /* UI 오버레이 */
@@ -46,7 +54,7 @@ body {
     pointer-events: none;
 }
 
-/* 점수판 */
+/* 점수판 - 스타듀밸리 스타일 */
 #scoreBoard {
     position: absolute;
     top: 20px;
@@ -59,92 +67,270 @@ body {
 }
 
 #highScore, #currentScore {
-    background: #000;
-    color: #fff;
-    padding: 12px 16px;
-    border: 4px solid #fff;
-    box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.5);
+    background: linear-gradient(180deg, #e8d4b0 0%, #d4b896 50%, #c4a87e 100%);
+    color: #3a2a1a;
+    padding: 14px 20px;
+    border: 4px solid #8b6f47;
+    border-radius: 8px;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        4px 4px 0 0 rgba(0, 0, 0, 0.3),
+        0 6px 8px rgba(0, 0, 0, 0.4);
     font-size: 14px;
-    letter-spacing: 1px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    position: relative;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+#highScore::before, #currentScore::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
 }
 
 #currentScore {
-    background: #fff;
-    border-color: #000;
-    color: #000;
-    box-shadow: 4px 4px 0 0 #000;
+    background: linear-gradient(180deg, #f4e4c4 0%, #e8d4b0 50%, #d4b896 100%);
+    border-color: #a0825a;
+    color: #2a1a0a;
+    font-weight: 900;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        4px 4px 0 0 rgba(139, 111, 71, 0.5),
+        0 6px 8px rgba(0, 0, 0, 0.3);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-/* 화면 공통 스타일 */
+/* 화면 공통 스타일 - 스타듀밸리 RPG 스타일 */
 .screen {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #000;
-    padding: 30px;
-    border: 6px solid #fff;
+    background: linear-gradient(180deg, #f4e4c4 0%, #e8d4b0 30%, #d4b896 70%, #c4a87e 100%);
+    padding: 40px 50px;
+    border: 8px solid #8b6f47;
+    border-radius: 16px;
     box-shadow:
-        0 0 0 2px #000,
-        8px 8px 0 0 #444;
+        inset 0 4px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+        0 0 0 4px #6b5437,
+        0 0 0 8px #5a4527,
+        0 12px 24px rgba(0, 0, 0, 0.5),
+        0 18px 36px rgba(0, 0, 0, 0.3);
     text-align: center;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     pointer-events: none;
-    min-width: 400px;
+    min-width: 450px;
+    z-index: 100;
+}
+
+/* 나무 질감 효과 */
+.screen::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 2px solid rgba(139, 111, 71, 0.3);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 모서리 장식 */
+.screen::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 화면 내부 콘텐츠 */
+.screen h1, .screen h2, .screen p, .screen div, .screen button {
+    position: relative;
+    z-index: 1;
 }
 
 .screen.active {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+    animation: screenFadeIn 0.3s ease;
+}
+
+@keyframes screenFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* 스토리 화면 */
+#storyScreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: linear-gradient(180deg, #2a1a0a 0%, #1a0a00 100%) !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    min-width: unset !important;
+    max-width: unset !important;
+}
+
+#storyScreen::before {
+    display: none !important;
+}
+
+#storyScreen::after {
+    display: none !important;
+}
+
+#storyText {
+    font-size: 18px;
+    color: #f4e4c4;
+    line-height: 2.2;
+    text-align: center;
+    white-space: pre-wrap;
+    max-width: 800px;
+    padding: 40px;
+    letter-spacing: 1px;
+    background: rgba(139, 111, 71, 0.2);
+    border-radius: 16px;
+    border: 3px solid #8b6f47;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.1),
+        0 8px 16px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+#storyText p {
+    margin-bottom: 20px;
+}
+
+#storySkip {
+    position: absolute;
+    bottom: 40px;
+    font-size: 12px;
+    color: #c4a87e;
+    text-align: center;
+    animation: blink 1.5s ease-in-out infinite;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
 }
 
 /* 메뉴 화면 */
+#menuScreen {
+    z-index: 100;
+}
+
 #menuScreen h1 {
     font-family: 'Press Start 2P', monospace;
-    font-size: 32px;
-    color: #fff;
-    margin-bottom: 20px;
-    text-shadow: 4px 4px 0 #000;
-    letter-spacing: 4px;
-    line-height: 1.5;
+    font-size: 36px;
+    color: #5a4527;
+    margin-bottom: 25px;
+    text-shadow:
+        2px 2px 0 rgba(255, 255, 255, 0.8),
+        4px 4px 0 rgba(139, 111, 71, 0.5);
+    letter-spacing: 3px;
+    line-height: 1.6;
     text-transform: uppercase;
+    position: relative;
+    z-index: 1;
 }
 
 #menuScreen p {
-    font-size: 13px;
-    color: #fff;
-    margin-bottom: 30px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #6b5437;
+    margin-bottom: 35px;
     letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+    position: relative;
+    z-index: 1;
 }
 
 /* 게임 오버 화면 */
+#gameOverScreen {
+    z-index: 100;
+}
+
 #gameOverScreen h2 {
     font-size: 32px;
-    color: #fff;
-    margin-bottom: 20px;
-    text-shadow: 4px 4px 0 #000;
+    color: #8b3a3a;
+    margin-bottom: 25px;
+    text-shadow:
+        2px 2px 0 rgba(255, 255, 255, 0.6),
+        3px 3px 0 rgba(139, 58, 58, 0.4);
     letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
 }
 
 #gameOverScreen p {
     font-size: 11px;
-    color: #aaa;
+    color: #8b7355;
     margin: 20px 0 10px 0;
+    position: relative;
+    z-index: 1;
 }
 
 #finalScore, #bestScore, #obstacleCount {
-    font-size: 15px;
-    margin: 12px 0;
-    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 14px 0;
+    color: #5a4527;
     letter-spacing: 0.5px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    border: 2px solid rgba(139, 111, 71, 0.5);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 1;
 }
 
 #bestScore {
-    color: #fff;
-    text-shadow: 2px 2px 0 #000;
+    color: #6b4423;
+    background: rgba(255, 215, 100, 0.4);
+    border-color: rgba(200, 150, 50, 0.6);
+    text-shadow:
+        1px 1px 0 rgba(255, 255, 255, 0.9),
+        2px 2px 0 rgba(200, 150, 50, 0.4);
 }
 
 /* 일시정지 화면 */
@@ -154,87 +340,192 @@ body {
 
 #pauseScreen h2 {
     font-size: 28px;
-    color: #fff;
+    color: #5a4527;
     margin-bottom: 30px;
     letter-spacing: 1px;
+    text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
 }
 
 /* 설정 화면 */
+#settingsScreen {
+    min-width: 400px;
+    z-index: 200 !important;
+    position: fixed !important;
+}
+
+#settingsScreen.active {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
 #settingsScreen h2 {
-    font-size: 24px;
-    color: #fff;
-    margin-bottom: 30px;
+    font-size: 26px;
+    color: #5a4527;
+    margin-bottom: 35px;
     letter-spacing: 1px;
+    text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
+    position: relative;
+    z-index: 1;
+}
+
+/* 크레딧 화면 */
+#creditsScreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: linear-gradient(180deg, #2a1a0a 0%, #1a0a00 100%) !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    min-width: unset !important;
+    max-width: unset !important;
+}
+
+#creditsScreen::before {
+    display: none;
+}
+
+#creditsScreen::after {
+    display: none;
+}
+
+#creditsScreen h2 {
+    font-size: 28px;
+    color: #f4e4c4;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
+    text-shadow:
+        2px 2px 0 rgba(139, 111, 71, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.5);
 }
 
 .setting-item {
-    margin: 20px 0;
+    margin: 15px 0;
     text-align: left;
+    background: rgba(255, 255, 255, 0.4);
+    padding: 15px 20px;
+    border-radius: 8px;
+    border: 2px solid rgba(139, 111, 71, 0.5);
+    position: relative;
+    z-index: 1;
 }
 
 .setting-item label {
     display: flex;
     align-items: center;
-    font-size: 14px;
-    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    color: #5a4527;
     cursor: pointer;
     letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+    position: relative;
+    z-index: 1;
 }
 
 .setting-item input[type="checkbox"] {
-    margin-right: 10px;
-    transform: scale(1.5);
+    margin-right: 12px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
+    accent-color: #8b6f47;
+    position: relative;
+    z-index: 1;
 }
 
-/* 버튼 스타일 - 모두 동일한 호버링 */
+/* 버튼 스타일 - 스타듀밸리 나무 버튼 스타일 */
 button {
     font-family: 'Noto Sans KR', 'Press Start 2P', sans-serif;
-    font-weight: 900;
-    background: #000;
-    color: #fff;
-    border: 4px solid #fff;
-    padding: 12px 24px;
-    margin: 8px;
-    font-size: 13px;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    background: linear-gradient(180deg, #8b6f47 0%, #6b5437 50%, #5a4527 100%);
+    color: #f4e4c4;
+    border: 4px solid #6b5437;
+    border-radius: 10px;
+    padding: 14px 28px;
+    margin: 10px;
+    font-size: 14px;
+    letter-spacing: 0.8px;
     cursor: pointer;
-    transition: all 0.1s ease;
-    box-shadow: 4px 4px 0 0 #fff;
+    transition: all 0.15s ease;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+        0 4px 0 0 #4a3517,
+        0 6px 8px rgba(0, 0, 0, 0.4);
     pointer-events: auto;
     position: relative;
+    z-index: 1;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    z-index: -1;
 }
 
 button:hover {
-    background: #fff;
-    color: #000;
-    border-color: #000;
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 0 #000;
+    background: linear-gradient(180deg, #a08458 0%, #8b6f47 50%, #6b5437 100%);
+    color: #fff;
+    border-color: #8b6f47;
+    transform: translateY(2px);
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 2px 0 0 #4a3517,
+        0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 button:active {
-    transform: translate(4px, 4px);
-    box-shadow: 0 0 0 0 #fff;
+    transform: translateY(4px);
+    box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.4),
+        0 0 0 0 #4a3517,
+        0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 컨트롤 안내 */
 #controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
-    background: #000;
-    color: #fff;
-    padding: 10px 20px;
-    border: 3px solid #fff;
-    box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.5);
+    background: linear-gradient(180deg, #e8d4b0 0%, #d4b896 50%, #c4a87e 100%);
+    color: #5a4527;
+    padding: 12px 24px;
+    border: 4px solid #8b6f47;
+    border-radius: 10px;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.4);
     font-size: 12px;
     letter-spacing: 0.5px;
     pointer-events: none;
     opacity: 1;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.3s ease;
     z-index: 5;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* 게임 플레이 중에는 컨트롤 가이드 숨기기 */
@@ -245,8 +536,13 @@ body.playing #controls {
 /* 반응형 디자인 */
 @media (max-width: 800px) {
     .screen {
-        min-width: 300px;
-        padding: 30px 20px;
+        min-width: 320px;
+        padding: 30px 25px;
+        border: 6px solid #8b6f47;
+    }
+
+    #settingsScreen {
+        min-width: 320px;
     }
 
     #menuScreen h1 {
@@ -255,8 +551,9 @@ body.playing #controls {
     }
 
     button {
-        padding: 10px 20px;
-        font-size: 11px;
+        padding: 12px 22px;
+        font-size: 12px;
+        border: 3px solid #6b5437;
     }
 
     #scoreBoard {
@@ -264,8 +561,37 @@ body.playing #controls {
     }
 
     #highScore, #currentScore {
-        font-size: 12px;
-        padding: 8px 12px;
+        font-size: 11px;
+        padding: 10px 14px;
+        border: 3px solid #8b6f47;
+    }
+
+    .heat-gauge {
+        width: 180px;
+        right: 20px;
+    }
+
+    .heat-gauge-container {
+        height: 24px;
+    }
+
+    #controls {
+        bottom: 20px;
+        padding: 10px 20px;
+        font-size: 11px;
+    }
+
+    .setting-item {
+        padding: 12px 16px;
+    }
+
+    .setting-item label {
+        font-size: 13px;
+    }
+
+    #finalScore, #bestScore, #obstacleCount {
+        font-size: 14px;
+        padding: 10px 16px;
     }
 }
 
@@ -276,10 +602,20 @@ body.playing #controls {
 
 @keyframes glow {
     from {
-        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 2px 2px 0 #000;
+        background: rgba(255, 215, 100, 0.3);
+        box-shadow:
+            0 0 10px rgba(255, 215, 100, 0.5),
+            0 0 20px rgba(255, 215, 100, 0.3),
+            inset 0 0 10px rgba(255, 215, 100, 0.2);
+        border-color: rgba(200, 150, 50, 0.6);
     }
     to {
-        text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff, 2px 2px 0 #000;
+        background: rgba(255, 215, 100, 0.5);
+        box-shadow:
+            0 0 20px rgba(255, 215, 100, 0.8),
+            0 0 40px rgba(255, 215, 100, 0.5),
+            inset 0 0 15px rgba(255, 215, 100, 0.4);
+        border-color: rgba(200, 150, 50, 0.8);
     }
 }
 
@@ -307,12 +643,12 @@ body.playing #controls {
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* 더위 게이지 스타일 */
+/* 더위 게이지 스타일 - RPG 체력바 스타일 */
 .heat-gauge {
     position: absolute;
-    top: 70px;
+    top: 80px;
     right: 40px;
-    width: 200px;
+    width: 220px;
     pointer-events: none;
     z-index: 10;
     opacity: 0;
@@ -327,62 +663,89 @@ body.lava-map .heat-gauge {
 }
 
 .heat-gauge-label {
-    color: #fff;
-    font-size: 10px;
+    color: #f4e4c4;
+    font-size: 11px;
     letter-spacing: 1px;
-    margin-bottom: 5px;
-    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 8px;
+    text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.8),
+        0 0 8px rgba(100, 200, 255, 0.5);
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    font-weight: 700;
 }
 
 .water-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     vertical-align: middle;
     image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
 }
 
 .heat-gauge-container {
     position: relative;
-    background: #000;
-    border: 3px solid #fff;
-    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.5);
-    height: 24px;
+    background: linear-gradient(180deg, #3a2a1a 0%, #2a1a0a 100%);
+    border: 4px solid #8b6f47;
+    border-radius: 12px;
+    box-shadow:
+        inset 0 3px 6px rgba(0, 0, 0, 0.6),
+        0 4px 0 0 #4a3517,
+        0 6px 8px rgba(0, 0, 0, 0.5);
+    height: 28px;
     overflow: hidden;
+    padding: 2px;
 }
 
 .heat-gauge-bar {
     position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
-    background: #fff;
-    transition: width 0.2s ease, background 0.2s ease;
+    left: 2px;
+    top: 2px;
+    height: calc(100% - 4px);
+    width: calc(100% - 4px);
+    background: linear-gradient(180deg, #87ceeb 0%, #5fa8d3 50%, #4a90ba 100%);
+    border-radius: 8px;
+    transition: width 0.3s ease, background 0.2s ease;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(100, 200, 255, 0.3);
 }
 
 /* 게이지 깜빡임 효과 (50% 이하) */
 .heat-gauge-bar.warning {
+    background: linear-gradient(180deg, #f4a460 0%, #e08040 50%, #c85a30 100%);
     animation: gauge-blink 1s ease-in-out infinite;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(255, 150, 50, 0.5);
 }
 
 /* 게이지 빠른 깜빡임 효과 (30% 이하) */
 .heat-gauge-bar.critical {
+    background: linear-gradient(180deg, #e04040 0%, #c02020 50%, #a01010 100%);
     animation: gauge-blink-fast 0.5s ease-in-out infinite;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+        0 0 12px rgba(255, 50, 50, 0.7);
 }
 
 .heat-gauge-value {
     position: absolute;
-    right: 6px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    color: #fff;
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-shadow: 1px 1px 0 #000;
+    color: #f4e4c4;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.8),
+        0 0 4px rgba(255, 255, 255, 0.3);
     z-index: 1;
+    font-weight: 700;
 }
 
 @keyframes gauge-blink {

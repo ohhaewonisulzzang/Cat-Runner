@@ -9,13 +9,13 @@ import { ImageLoader } from './utils/imageLoader.js';
  * 메인 게임 엔진
  */
 export class GameEngine {
-    constructor() {
+    constructor(storyScreen) {
         // 캔버스 초기화
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
 
         // 게임 상태 관리자
-        this.gameState = new GameStateManager();
+        this.gameState = new GameStateManager(storyScreen);
 
         // 게임 객체들
         this.player = new Player(this.gameState);

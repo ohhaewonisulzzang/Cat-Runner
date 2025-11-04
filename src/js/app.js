@@ -1,14 +1,19 @@
 // 메인 애플리케이션 진입점
 import { GameEngine } from './gameEngine.js';
+import { StoryScreen } from './ui/StoryScreen.js';
 
 // DOM 로드 완료 시 게임 초기화
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Cat Runner 게임 초기화 중...');
 
     let gameEngine;
+    let storyScreen;
 
     try {
-        gameEngine = new GameEngine();
+        // 스토리 화면 초기화 (시작하지 않음)
+        storyScreen = new StoryScreen();
+
+        gameEngine = new GameEngine(storyScreen);
         console.log('게임 엔진 초기화 완료');
 
         // 전역 스코프에 게임 엔진 등록 (디버깅용)

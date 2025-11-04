@@ -162,23 +162,38 @@ export class Obstacle {
     }
 
     getBounds() {
-        // LARGE 사이즈 장애물은 히트박스를 약간 줄임
-        if (this.size === GAME_CONSTANTS.OBSTACLE.SIZES.LARGE) {
-            const sidePadding = 12; // 좌우 각 12픽셀씩 줄임
-            const bottomPadding = 12; // 아래쪽만 12픽셀 줄임
-            return {
-                x: this.x + sidePadding,
-                y: this.y, // 위쪽은 그대로 유지
-                width: this.width - (sidePadding * 2),
-                height: this.height - bottomPadding
-            };
+        // 히트박스를 실제 이미지보다 작게 설정 (게임플레이 향상)
+        let sidePadding = 0;
+        let heightRatio = 0.75; // 전체 높이의 75%를 히트박스로 사용
+
+        if (this.size === GAME_CONSTANTS.OBSTACLE.SIZES.SMALL) {
+            sidePadding = 8;
+            heightRatio = 0.75;
+        } else if (this.size === GAME_CONSTANTS.OBSTACLE.SIZES.MEDIUM) {
+            sidePadding = 10;
+            heightRatio = 0.75;
+        } else if (this.size === GAME_CONSTANTS.OBSTACLE.SIZES.LARGE) {
+            sidePadding = 12;
+            heightRatio = 0.75;
+        }
+
+        const hitboxHeight = this.height * heightRatio;
+        let hitboxY;
+
+        // 지상 장애물: 땅에서부터 위로 히트박스 생성
+        if (this.type === GAME_CONSTANTS.OBSTACLE.TYPES.GROUND) {
+            hitboxY = GAME_CONSTANTS.OBSTACLE.GROUND_Y - hitboxHeight;
+        }
+        // 공중 장애물: 이미지 하단 부분에 히트박스 위치
+        else {
+            hitboxY = this.y + (this.height - hitboxHeight);
         }
 
         return {
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height
+            x: this.x + sidePadding,
+            y: hitboxY,
+            width: this.width - (sidePadding * 2),
+            height: hitboxHeight
         };
     }
 

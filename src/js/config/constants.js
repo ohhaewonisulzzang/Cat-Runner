@@ -20,13 +20,15 @@ export const GAME_CONSTANTS = {
     MAPS: {
         NORMAL: 'normal',
         LAVA: 'lava',
-        ICE: 'ice'
+        ICE: 'ice',
+        ARGENTINA: 'argentina'
     },
 
     // 맵 전환 점수 기준
     MAP_TRANSITIONS: {
         LAVA_THRESHOLD: 1000,
-        ICE_THRESHOLD: 3000
+        ICE_THRESHOLD: 3000,
+        ARGENTINA_THRESHOLD: 6500
     },
 
     // 배경 맵 점수 기준
@@ -43,7 +45,13 @@ export const GAME_CONSTANTS = {
         ICE: {
             MAP_01: { min: 3001, max: 4000 },
             MAP_02: { min: 4001, max: 5000 },
-            MAP_03: { min: 5001, max: Infinity }
+            MAP_03: { min: 5001, max: 6500 }
+        },
+        ARGENTINA: {
+            MAP_01: { min: 6500, max: 7499 },
+            MAP_02: { min: 7500, max: 8499 },
+            MAP_03: { min: 8500, max: 9499 },
+            MAP_04: { min: 9500, max: Infinity }
         }
     },
 
@@ -215,6 +223,12 @@ export const IMAGE_PATHS = {
             MAP_01: 'src/assets/images/background/ice/map_01.png',
             MAP_02: 'src/assets/images/background/ice/map_02.png',
             MAP_03: 'src/assets/images/background/ice/map_03.png'
+        },
+        ARGENTINA: {
+            MAP_01: 'src/assets/images/background/argentina/map_01.png',
+            MAP_02: 'src/assets/images/background/argentina/map_02.png',
+            MAP_03: 'src/assets/images/background/argentina/map_03.png',
+            MAP_04: 'src/assets/images/background/argentina/map_04.png'
         }
     },
 
@@ -247,5 +261,6 @@ export const IMAGE_PATHS = {
 // 오디오 경로
 export const AUDIO_PATHS = {
     BGM: 'src/assets/sounds/bgm.mp3',
-    JUMP: 'src/assets/sounds/jump.mp3'
+    JUMP: 'src/assets/sounds/jump.mp3',
+    TANGO: 'src/assets/sounds/tango.mp3'
 };

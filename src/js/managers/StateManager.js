@@ -5,10 +5,13 @@ import { AudioManager } from './AudioManager.js';
  * 게임 상태 관리 시스템
  */
 export class GameStateManager {
-    constructor() {
+    constructor(storyScreen) {
         this.states = GAME_CONSTANTS.STATES;
         this.currentState = this.states.MENU;
         this.previousState = null;
+
+        // 스토리 화면
+        this.storyScreen = storyScreen;
 
         // 게임 데이터
         this.gameData = {
@@ -47,11 +50,24 @@ export class GameStateManager {
 
         if (newState === 'playing') {
             this.updateMapClass();
-            // 게임 플레이 시작 시 BGM 재생
-            this.audioManager.playBGM();
+            // 게임 플레이 시작 시 음악 재생
+            if (this.gameData.currentMap === GAME_CONSTANTS.MAPS.ARGENTINA) {
+                // 아르헨티나 맵에서는 탱고 재생
+                this.audioManager.playTango();
+            } else {
+                // 일반 맵에서는 BGM 재생
+                this.audioManager.playBGM();
+            }
         } else {
-            // 게임 플레이 중이 아닐 때 BGM 일시정지
+            // 게임 플레이 중이 아닐 때 모든 음악 일시정지
             this.audioManager.pauseBGM();
+            this.audioManager.pauseTango();
+        }
+
+        // 게임 오버 시 모든 음악 정지 및 초기화 (처음부터 재생되도록)
+        if (newState === 'gameOver') {
+            this.audioManager.stopBGM();
+            this.audioManager.stopTango();
         }
 
         if (this.stateChangeCallbacks[newState]) {
@@ -90,6 +106,18 @@ export class GameStateManager {
             this.triggerMapTransition(GAME_CONSTANTS.MAPS.ICE);
         }
 
+        if (prevScore < GAME_CONSTANTS.MAP_TRANSITIONS.ARGENTINA_THRESHOLD &&
+            this.gameData.score >= GAME_CONSTANTS.MAP_TRANSITIONS.ARGENTINA_THRESHOLD &&
+            this.gameData.currentMap === GAME_CONSTANTS.MAPS.ICE) {
+            this.triggerArgentinaStory();
+        }
+
+        // 엔딩 체크 (10000점)
+        if (prevScore < 10000 && this.gameData.score >= 10000) {
+            this.triggerEnding();
+            return; // 엔딩 트리거 후 더 이상 진행하지 않음
+        }
+
         // 최고 점수 확인
         if (this.gameData.score > this.gameData.highScore) {
             this.gameData.highScore = this.gameData.score;
@@ -115,14 +143,71 @@ export class GameStateManager {
         }, 1000);
     }
 
+    // 아르헨티나 스토리 트리거
+    triggerArgentinaStory() {
+        // 게임 일시 정지
+        this.previousState = this.currentState;
+        this.currentState = 'story';
+
+        // 탱고 음악 재생
+        this.audioManager.playTango();
+
+        // 스토리 화면 표시
+        this.storyScreen.show();
+        this.storyScreen.start(() => {
+            // 스토리 완료 후 탱고는 계속 재생 (아르헨티나 맵 BGM)
+            // BGM 재개하지 않음
+
+            // 맵 전환 및 게임 재개
+            this.triggerMapTransition(GAME_CONSTANTS.MAPS.ARGENTINA);
+            this.currentState = this.previousState;
+        }, 'argentina');
+    }
+
+    // 엔딩 트리거 (10000점)
+    triggerEnding() {
+        // 게임 상태를 엔딩으로 변경
+        this.currentState = 'ending';
+
+        // BGM과 Tango 정지
+        this.audioManager.stopBGM();
+        this.audioManager.stopTango();
+
+        // 엔딩 스토리 화면 표시
+        this.storyScreen.show();
+        this.storyScreen.start(() => {
+            // 엔딩 스토리 완료 후 크레딧 표시
+            this.showCredits();
+        }, 'ending');
+    }
+
+    // 크레딧 화면 표시
+    showCredits() {
+        // 스토리 화면 숨김
+        this.storyScreen.hide();
+
+        // 크레딧 화면 표시
+        const creditsScreen = document.getElementById('creditsScreen');
+        creditsScreen.classList.add('active');
+
+        // 크레딧 버튼 이벤트 (메인 메뉴로)
+        const creditsToMenuBtn = document.getElementById('creditsToMenuBtn');
+        creditsToMenuBtn.onclick = () => {
+            creditsScreen.classList.remove('active');
+            this.setState(this.states.MENU);
+        };
+    }
+
     // 맵 클래스 업데이트
     updateMapClass() {
-        document.body.classList.remove('normal-map', 'lava-map', 'ice-map');
+        document.body.classList.remove('normal-map', 'lava-map', 'ice-map', 'argentina-map');
 
         if (this.gameData.currentMap === GAME_CONSTANTS.MAPS.LAVA) {
             document.body.classList.add('lava-map');
         } else if (this.gameData.currentMap === GAME_CONSTANTS.MAPS.ICE) {
             document.body.classList.add('ice-map');
+        } else if (this.gameData.currentMap === GAME_CONSTANTS.MAPS.ARGENTINA) {
+            document.body.classList.add('argentina-map');
         } else {
             document.body.classList.add('normal-map');
         }
@@ -252,7 +337,14 @@ export class GameStateManager {
     // UI 초기화
     initializeUI() {
         document.getElementById('startBtn').addEventListener('click', () => {
-            this.setState(this.states.PLAYING);
+            // 메뉴 화면 숨기기
+            document.getElementById('menuScreen').classList.remove('active');
+
+            // 스토리 재생 후 게임 시작
+            this.storyScreen.show();
+            this.storyScreen.start(() => {
+                this.setState(this.states.PLAYING);
+            });
         });
 
         document.getElementById('settingsBtn').addEventListener('click', () => {
@@ -285,10 +377,15 @@ export class GameStateManager {
         document.getElementById('soundToggle').addEventListener('change', (e) => {
             this.gameData.soundEnabled = e.target.checked;
             this.saveSetting('soundEnabled', e.target.checked);
-            // 사운드 설정 변경 시 BGM 제어
+            // 사운드 설정 변경 시 음악 제어
             this.audioManager.toggleMute(!e.target.checked);
             if (e.target.checked && this.currentState === this.states.PLAYING) {
-                this.audioManager.playBGM();
+                // 아르헨티나 맵이면 탱고, 아니면 BGM
+                if (this.gameData.currentMap === GAME_CONSTANTS.MAPS.ARGENTINA) {
+                    this.audioManager.playTango();
+                } else {
+                    this.audioManager.playBGM();
+                }
             }
         });
 

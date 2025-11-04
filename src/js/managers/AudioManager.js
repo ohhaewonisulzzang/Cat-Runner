@@ -7,9 +7,12 @@ export class AudioManager {
     constructor() {
         this.bgm = null;
         this.bgmLoaded = false;
+        this.tango = null;
+        this.tangoLoaded = false;
         this.isMuted = false;
 
         this.initializeBGM();
+        this.initializeTango();
     }
 
     initializeBGM() {
@@ -33,6 +36,28 @@ export class AudioManager {
             console.log('BGM 초기화 완료');
         } catch (error) {
             console.error('BGM 초기화 실패:', error);
+        }
+    }
+
+    initializeTango() {
+        try {
+            this.tango = new Audio(AUDIO_PATHS.TANGO);
+            this.tango.loop = true;  // 탱고를 반복 재생으로 변경
+            this.tango.volume = 0.6;
+
+            this.tango.addEventListener('canplaythrough', () => {
+                this.tangoLoaded = true;
+                console.log('Tango 로드 완료');
+            });
+
+            this.tango.addEventListener('error', (e) => {
+                console.error('Tango 로드 실패:', e);
+                this.tangoLoaded = false;
+            });
+
+            console.log('Tango 초기화 완료');
+        } catch (error) {
+            console.error('Tango 초기화 실패:', error);
         }
     }
 
@@ -90,5 +115,51 @@ export class AudioManager {
     // BGM이 재생 중인지 확인
     isPlaying() {
         return this.bgm && !this.bgm.paused;
+    }
+
+    // Tango가 재생 중인지 확인
+    isTangoPlaying() {
+        return this.tango && !this.tango.paused;
+    }
+
+    // Tango 재생
+    playTango() {
+        if (!this.tango || !this.tangoLoaded || this.isMuted) return;
+
+        // BGM 일시 정지
+        this.pauseBGM();
+
+        // Tango 재생
+        this.tango.currentTime = 0;
+        const playPromise = this.tango.play();
+
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    console.log('Tango 재생 시작');
+                })
+                .catch(error => {
+                    console.log('Tango 자동 재생 차단됨:', error);
+                });
+        }
+    }
+
+    // Tango 정지
+    stopTango() {
+        if (!this.tango) return;
+
+        this.tango.pause();
+        this.tango.currentTime = 0;
+        console.log('Tango 정지');
+    }
+
+    // Tango 일시정지
+    pauseTango() {
+        if (!this.tango) return;
+
+        if (!this.tango.paused) {
+            this.tango.pause();
+            console.log('Tango 일시정지');
+        }
     }
 }
