@@ -58,15 +58,28 @@ export class Player {
      */
     async loadImages() {
         try {
+            // 선택된 캐릭터 가져오기
+            const selectedCharacter = this.gameState.gameData.selectedCharacter || 'cat';
+
+            // 캐릭터 폴더 경로
+            const basePath = `src/assets/images/player/${selectedCharacter}`;
+
             // 달리기 이미지 로드
-            const runImagePaths = [1, 2, 3, 4].map(i => IMAGE_PATHS.PLAYER.RUN(i));
+            let runImagePaths;
+            if (selectedCharacter === 'hoodiecat') {
+                // hoodiecat은 cat_run1.png, cat_run2.png 형식
+                runImagePaths = [1, 2, 3, 4].map(i => `${basePath}/cat_run${i}.png`);
+            } else {
+                // cat은 cat_run_1.png, cat_run_2.png 형식
+                runImagePaths = [1, 2, 3, 4].map(i => `${basePath}/cat_run_${i}.png`);
+            }
             this.images.run = await ImageLoader.loadImages(runImagePaths);
 
             // 점프 이미지 로드
-            this.images.jump = await ImageLoader.loadImage(IMAGE_PATHS.PLAYER.JUMP);
+            this.images.jump = await ImageLoader.loadImage(`${basePath}/cat_jump.png`);
 
             this.imagesLoaded = true;
-            console.log('플레이어 이미지 로드 완료!');
+            console.log(`플레이어 이미지 로드 완료! (${selectedCharacter})`);
         } catch (error) {
             console.error('플레이어 이미지 로드 실패:', error);
         }
@@ -316,6 +329,9 @@ export class Player {
         this.spacePressed = false;
         this.frameIndex = 0;
         this.animationTimer = 0;
+
+        // 캐릭터가 변경되었을 수 있으므로 이미지 다시 로드
+        this.loadImages();
     }
 
     /**

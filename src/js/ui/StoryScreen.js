@@ -6,7 +6,9 @@ export class StoryScreen {
         this.storyScreen = document.getElementById('storyScreen');
         this.storyText = document.getElementById('storyText');
         this.storySkip = document.getElementById('storySkip');
+        this.storyCutscene = document.getElementById('storyCutscene');
 
+        // 스토리를 줄 단위로 나눔
         this.stories = {
             intro: `나는 버려졌다.
 
@@ -47,10 +49,13 @@ export class StoryScreen {
 나는 이제 혼자가 아니다. 새로운 친구와 함께, 진짜 나의 집에서 행복하게 살았다.`
         };
 
-        this.currentStory = '';
-        this.currentIndex = 0;
-        this.typingSpeed = 50; // 밀리초 단위
+        this.storyLines = [];
+        this.currentLineIndex = 0;
+        this.currentCharIndex = 0;
+        this.currentLineText = '';
+        this.typingSpeed = 50;
         this.isTyping = false;
+        this.isWaiting = false;
         this.typingInterval = null;
         this.onComplete = null;
 
@@ -58,16 +63,16 @@ export class StoryScreen {
     }
 
     setupEventListeners() {
-        // 클릭으로 스킵
+        // 클릭으로 다음 진행
         this.storyScreen.addEventListener('click', () => {
-            this.skip();
+            this.handleNext();
         });
 
-        // 스페이스바로 스킵
+        // 스페이스바로 다음 진행
         const handleKeyPress = (e) => {
-            if (e.code === 'Space' && this.isTyping) {
+            if (e.code === 'Space') {
                 e.preventDefault();
-                this.skip();
+                this.handleNext();
             }
         };
 
@@ -75,34 +80,89 @@ export class StoryScreen {
         document.addEventListener('keydown', this.keyPressHandler);
     }
 
-    start(onComplete, storyType = 'intro') {
-        this.currentStory = this.stories[storyType];
-        this.onComplete = onComplete;
-        this.currentIndex = 0;
-        this.storyText.textContent = '';
-        this.isTyping = true;
-
-        this.typeText();
+    handleNext() {
+        if (this.isTyping) {
+            // 타이핑 중이면 현재 줄 전체 표시
+            this.skipCurrentLine();
+        } else if (this.isWaiting) {
+            // 대기 중이면 다음 줄로
+            this.nextLine();
+        }
     }
 
-    typeText() {
-        if (this.currentIndex < this.currentStory.length) {
-            this.storyText.textContent += this.currentStory[this.currentIndex];
-            this.currentIndex++;
+    skipCurrentLine() {
+        clearTimeout(this.typingInterval);
+        this.storyText.textContent = this.currentLineText;
+        this.isTyping = false;
+        this.isWaiting = true;
+        this.storyText.classList.add('waiting');
+    }
 
-            this.typingInterval = setTimeout(() => {
-                this.typeText();
-            }, this.typingSpeed);
+    nextLine() {
+        this.currentLineIndex++;
+        this.isWaiting = false;
+        this.storyText.classList.remove('waiting');
+
+        if (this.currentLineIndex < this.storyLines.length) {
+            this.typeCurrentLine();
         } else {
             this.finish();
         }
     }
 
-    skip() {
-        if (this.isTyping) {
-            clearTimeout(this.typingInterval);
-            this.storyText.textContent = this.currentStory;
-            this.finish();
+    start(onComplete, storyType = 'intro') {
+        const fullStory = this.stories[storyType];
+        this.onComplete = onComplete;
+        this.currentStoryType = storyType;
+
+        // cutscene 이미지 설정 및 표시
+        const cutsceneImage = document.getElementById('storyCutsceneImage');
+        if (storyType === 'intro') {
+            cutsceneImage.src = 'src/assets/images/cut/startcut.png';
+            this.storyCutscene.classList.add('active');
+        } else if (storyType === 'argentina') {
+            cutsceneImage.src = 'src/assets/images/cut/middlecut.png';
+            this.storyCutscene.classList.add('active');
+        } else if (storyType === 'ending') {
+            cutsceneImage.src = 'src/assets/images/cut/endcut.png';
+            this.storyCutscene.classList.add('active');
+        } else {
+            this.storyCutscene.classList.remove('active');
+        }
+
+        // 스토리를 줄 단위로 분할 (빈 줄 제거)
+        this.storyLines = fullStory.split('\n').filter(line => line.trim().length > 0);
+        this.currentLineIndex = 0;
+        this.currentCharIndex = 0;
+        this.isWaiting = false;
+        this.storyText.classList.remove('waiting');
+
+        // 첫 번째 줄 타이핑 시작
+        this.typeCurrentLine();
+    }
+
+    typeCurrentLine() {
+        this.currentLineText = this.storyLines[this.currentLineIndex];
+        this.currentCharIndex = 0;
+        this.storyText.textContent = '';
+        this.isTyping = true;
+
+        this.typeNextChar();
+    }
+
+    typeNextChar() {
+        if (this.currentCharIndex < this.currentLineText.length) {
+            this.storyText.textContent += this.currentLineText[this.currentCharIndex];
+            this.currentCharIndex++;
+
+            this.typingInterval = setTimeout(() => {
+                this.typeNextChar();
+            }, this.typingSpeed);
+        } else {
+            // 현재 줄 타이핑 완료
+            this.isTyping = false;
+            this.isWaiting = true;
+            this.storyText.classList.add('waiting');
         }
     }
 
@@ -120,6 +180,7 @@ export class StoryScreen {
 
     hide() {
         this.storyScreen.classList.remove('active');
+        this.storyCutscene.classList.remove('active');
         document.removeEventListener('keydown', this.keyPressHandler);
     }
 

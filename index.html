@@ -35,8 +35,11 @@
             <!-- 게임 상태별 화면 -->
             <!-- 스토리 화면 -->
             <div id="storyScreen" class="screen">
+                <div id="storyCutscene">
+                    <img id="storyCutsceneImage" src="src/assets/images/cut/endcut.png" alt="엔딩 장면">
+                </div>
                 <div id="storyText"></div>
-                <div id="storySkip">클릭하거나 스페이스바를 눌러 스킵</div>
+                <div id="storySkip">클릭 또는 스페이스바로 계속</div>
             </div>
 
             <div id="menuScreen" class="screen active">
@@ -64,17 +67,45 @@
             <!-- 설정 화면 -->
             <div id="settingsScreen" class="screen">
                 <h2>설정</h2>
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="soundToggle" checked>
-                        사운드
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="sfxToggle" checked>
-                        효과음
-                    </label>
+                <div class="settings-container">
+                    <!-- 왼쪽: 사운드 설정 -->
+                    <div class="settings-left">
+                        <h3>사운드 설정</h3>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="soundToggle" checked>
+                                사운드
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="sfxToggle" checked>
+                                효과음
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 캐릭터 선택 -->
+                    <div class="settings-right">
+                        <h3>캐릭터 선택</h3>
+                        <div class="character-preview">
+                            <img id="characterPreview" src="src/assets/images/player/cat/cat_run_1.png" alt="캐릭터 미리보기">
+                        </div>
+                        <div class="character-carousel">
+                            <button class="carousel-arrow carousel-arrow-left" id="carouselPrev">
+                                <span>◀</span>
+                            </button>
+                            <div class="character-display">
+                                <div class="character-display-image">
+                                    <img id="carouselImage" src="src/assets/images/player/cat/cat_run_1.png" alt="캐릭터">
+                                </div>
+                                <div class="character-display-name" id="carouselName">일반 고양이</div>
+                            </div>
+                            <button class="carousel-arrow carousel-arrow-right" id="carouselNext">
+                                <span>▶</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <button id="closeSettingsBtn">닫기</button>
             </div>
