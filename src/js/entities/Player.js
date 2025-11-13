@@ -34,6 +34,9 @@ export class Player {
         this.animationSpeed = GAME_CONSTANTS.PLAYER.ANIMATION_SPEED;
         this.animationTimer = 0;
 
+        // 장신구 미세 흔들림
+        this.accessoryShakeTime = 0;
+
         // 입력 상태
         this.spacePressed = false;
         this.jumpStartTime = 0;
@@ -45,11 +48,16 @@ export class Player {
         };
         this.imagesLoaded = false;
 
+        // 장신구 이미지
+        this.accessoryImages = {};
+        this.accessoriesLoaded = false;
+
         // 점프 효과음
         this.jumpSound = new Audio(AUDIO_PATHS.JUMP);
         this.jumpSound.volume = 0.5; // 볼륨 50%
 
         this.loadImages();
+        this.loadAccessories();
         this.initializeControls();
     }
 
@@ -58,31 +66,40 @@ export class Player {
      */
     async loadImages() {
         try {
-            // 선택된 캐릭터 가져오기
-            const selectedCharacter = this.gameState.gameData.selectedCharacter || 'cat';
-
-            // 캐릭터 폴더 경로
-            const basePath = `src/assets/images/player/${selectedCharacter}`;
+            // cat을 기본 캐릭터로 사용
+            const basePath = `src/assets/images/player/cat`;
 
             // 달리기 이미지 로드
-            let runImagePaths;
-            if (selectedCharacter === 'hoodiecat') {
-                // hoodiecat은 cat_run_1.png, cat_run_2.png 형식
-                // 애니메이션 순서 조정: 1 -> 3 -> 2 -> 4 (더 자연스러운 달리기)
-                runImagePaths = [1, 3, 2, 4].map(i => `${basePath}/cat_run_${i}.png`);
-            } else {
-                // cat은 cat_run_1.png, cat_run_2.png 형식
-                runImagePaths = [1, 2, 3, 4].map(i => `${basePath}/cat_run_${i}.png`);
-            }
+            const runImagePaths = [1, 2, 3, 4].map(i => `${basePath}/cat_run_${i}.png`);
             this.images.run = await ImageLoader.loadImages(runImagePaths);
 
             // 점프 이미지 로드
             this.images.jump = await ImageLoader.loadImage(`${basePath}/cat_jump.png`);
 
             this.imagesLoaded = true;
-            console.log(`플레이어 이미지 로드 완료! (${selectedCharacter})`);
+            console.log(`플레이어 이미지 로드 완료!`);
         } catch (error) {
             console.error('플레이어 이미지 로드 실패:', error);
+        }
+    }
+
+    /**
+     * 장신구 이미지 로드
+     */
+    async loadAccessories() {
+        try {
+            const basePath = `src/assets/images/accessories`;
+
+            this.accessoryImages = {
+                halo: await ImageLoader.loadImage(`${basePath}/halo.png`),
+                crown: await ImageLoader.loadImage(`${basePath}/crown.png`),
+                glass: await ImageLoader.loadImage(`${basePath}/glass.png`)
+            };
+
+            this.accessoriesLoaded = true;
+            console.log('장신구 이미지 로드 완료!');
+        } catch (error) {
+            console.error('장신구 이미지 로드 실패:', error);
         }
     }
 
@@ -171,6 +188,14 @@ export class Player {
         this.updatePhysics();
         this.updateAnimation(deltaTime);
         this.updateJumpInput();
+        this.updateAccessoryShake(deltaTime);
+    }
+
+    /**
+     * 장신구 미세 흔들림 업데이트
+     */
+    updateAccessoryShake(deltaTime) {
+        this.accessoryShakeTime += deltaTime / 1000;
     }
 
     /**
@@ -256,6 +281,9 @@ export class Player {
             } else {
                 this.renderPlaceholder(ctx);
             }
+
+            // 장신구 렌더링
+            this.renderAccessory(ctx);
         } else {
             this.renderPlaceholder(ctx);
         }
@@ -265,6 +293,57 @@ export class Player {
         }
 
         ctx.restore();
+    }
+
+    /**
+     * 장신구 렌더링
+     */
+    renderAccessory(ctx) {
+        if (!this.accessoriesLoaded) return;
+
+        const selectedAccessory = this.gameState.gameData.selectedAccessory;
+        if (!selectedAccessory || selectedAccessory === 'none') return;
+
+        const accessoryImage = this.accessoryImages[selectedAccessory];
+        if (!accessoryImage) return;
+
+        // 고양이 머리 위치 계산 (이미지 상단에서 약간 아래)
+        const headCenterX = this.x + (this.width / 2) + 22; // 오른쪽으로 22px 이동
+        const headTopY = this.y + 30; // 고양이 머리 꼭대기 (더 아래로)
+
+        let accessoryWidth = 60;
+        let accessoryHeight = 60;
+
+        // 장신구 타입에 따라 위치 조정
+        let accessoryX = headCenterX - (accessoryWidth / 2);
+        let accessoryY = headTopY - accessoryHeight + 10;
+
+        switch (selectedAccessory) {
+            case 'halo':
+                // 천사 링은 머리 위에 떠있는 느낌
+                accessoryWidth = 70;
+                accessoryHeight = 30;
+                accessoryX = headCenterX - (accessoryWidth / 2);
+                accessoryY = headTopY - 45;
+                break;
+            case 'crown':
+                // 왕관은 머리 위에 더 높게
+                accessoryWidth = 70;
+                accessoryHeight = 70;
+                accessoryX = headCenterX - (accessoryWidth / 2);
+                accessoryY = headTopY - accessoryHeight + 10;
+                break;
+            case 'glass':
+                // 인싸 안경은 고양이 눈 부분에 (좌우로만 미세하게 흔들림)
+                accessoryWidth = 70;
+                accessoryHeight = 30;
+                const glassShakeX = Math.sin(this.accessoryShakeTime * 10) * 1.5; // 아주 작은 좌우 흔들림
+                accessoryX = headCenterX - (accessoryWidth / 2) + 6 + glassShakeX;
+                accessoryY = headTopY + 23;
+                break;
+        }
+
+        ctx.drawImage(accessoryImage, accessoryX, accessoryY, accessoryWidth, accessoryHeight);
     }
 
     /**
@@ -330,9 +409,10 @@ export class Player {
         this.spacePressed = false;
         this.frameIndex = 0;
         this.animationTimer = 0;
+        this.accessoryShakeTime = 0;
 
-        // 캐릭터가 변경되었을 수 있으므로 이미지 다시 로드
-        this.loadImages();
+        // 장신구가 변경되었을 수 있으므로 다시 로드
+        this.loadAccessories();
     }
 
     /**

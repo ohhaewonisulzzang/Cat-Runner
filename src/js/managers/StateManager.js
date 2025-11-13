@@ -22,7 +22,7 @@ export class GameStateManager {
             gameTime: 0,
             soundEnabled: this.loadSetting('soundEnabled', true),
             sfxEnabled: this.loadSetting('sfxEnabled', true),
-            selectedCharacter: this.loadSetting('selectedCharacter', 'cat'),
+            selectedAccessory: this.loadSetting('selectedAccessory', 'none'),
             currentMap: GAME_CONSTANTS.MAPS.NORMAL,
             mapTransitioning: false,
             heatGauge: GAME_CONSTANTS.HEAT_GAUGE.MAX,
@@ -387,19 +387,21 @@ export class GameStateManager {
             this.saveSetting('sfxEnabled', e.target.checked);
         });
 
-        // 캐릭터 캐러셀 이벤트
-        this.characters = [
-            { id: 'cat', name: '일반 고양이', runImage: 'src/assets/images/player/cat/cat_run_1.png' },
-            { id: 'hoodiecat', name: '후드티 고양이', runImage: 'src/assets/images/player/hoodiecat/cat_run_1.png' }
+        // 장신구 캐러셀 이벤트
+        this.accessories = [
+            { id: 'none', name: '없음', previewImage: null },
+            { id: 'halo', name: '천사 링', previewImage: 'src/assets/images/accessories/halo.png' },
+            { id: 'crown', name: '왕관', previewImage: 'src/assets/images/accessories/crown.png' },
+            { id: 'glass', name: '인싸 안경', previewImage: 'src/assets/images/accessories/glass.png' }
         ];
-        this.currentCharacterIndex = 0;
+        this.currentAccessoryIndex = 0;
 
         document.getElementById('carouselPrev').addEventListener('click', () => {
-            this.navigateCharacter(-1);
+            this.navigateAccessory(-1);
         });
 
         document.getElementById('carouselNext').addEventListener('click', () => {
-            this.navigateCharacter(1);
+            this.navigateAccessory(1);
         });
 
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
@@ -446,57 +448,56 @@ export class GameStateManager {
     updateSettingsScreen() {
         document.getElementById('soundToggle').checked = this.gameData.soundEnabled;
         document.getElementById('sfxToggle').checked = this.gameData.sfxEnabled;
-        this.updateCharacterSelection();
+        this.updateAccessorySelection();
     }
 
-    // 캐릭터 네비게이션
-    navigateCharacter(direction) {
-        this.currentCharacterIndex += direction;
+    // 장신구 네비게이션
+    navigateAccessory(direction) {
+        this.currentAccessoryIndex += direction;
 
         // 순환 처리
-        if (this.currentCharacterIndex < 0) {
-            this.currentCharacterIndex = this.characters.length - 1;
-        } else if (this.currentCharacterIndex >= this.characters.length) {
-            this.currentCharacterIndex = 0;
+        if (this.currentAccessoryIndex < 0) {
+            this.currentAccessoryIndex = this.accessories.length - 1;
+        } else if (this.currentAccessoryIndex >= this.accessories.length) {
+            this.currentAccessoryIndex = 0;
         }
 
-        const character = this.characters[this.currentCharacterIndex];
-        this.selectCharacter(character.id);
+        const accessory = this.accessories[this.currentAccessoryIndex];
+        this.selectAccessory(accessory.id);
     }
 
-    // 캐릭터 선택
-    selectCharacter(characterType) {
-        this.gameData.selectedCharacter = characterType;
-        this.saveSetting('selectedCharacter', characterType);
-        this.updateCharacterSelection();
+    // 장신구 선택
+    selectAccessory(accessoryType) {
+        this.gameData.selectedAccessory = accessoryType;
+        this.saveSetting('selectedAccessory', accessoryType);
+        this.updateAccessorySelection();
     }
 
-    // 캐릭터 선택 UI 업데이트
-    updateCharacterSelection() {
-        // 현재 선택된 캐릭터 찾기
-        const character = this.characters.find(c => c.id === this.gameData.selectedCharacter);
-        if (!character) return;
-
-        // 캐러셀 이미지 업데이트
-        const carouselImage = document.getElementById('carouselImage');
-        if (carouselImage) {
-            carouselImage.src = character.runImage;
-        }
+    // 장신구 선택 UI 업데이트
+    updateAccessorySelection() {
+        // 현재 선택된 장신구 찾기
+        const accessory = this.accessories.find(a => a.id === this.gameData.selectedAccessory);
+        if (!accessory) return;
 
         // 캐러셀 이름 업데이트
         const carouselName = document.getElementById('carouselName');
         if (carouselName) {
-            carouselName.textContent = character.name;
+            carouselName.textContent = accessory.name;
         }
 
-        // 미리보기 이미지 업데이트
-        const previewImg = document.getElementById('characterPreview');
-        if (previewImg) {
-            previewImg.src = character.runImage;
+        // 캐러셀 이미지 업데이트
+        const carouselImage = document.getElementById('carouselImage');
+        if (carouselImage) {
+            if (accessory.previewImage) {
+                carouselImage.src = accessory.previewImage;
+                carouselImage.style.display = 'block';
+            } else {
+                carouselImage.style.display = 'none';
+            }
         }
 
-        // currentCharacterIndex 동기화
-        this.currentCharacterIndex = this.characters.findIndex(c => c.id === this.gameData.selectedCharacter);
+        // currentAccessoryIndex 동기화
+        this.currentAccessoryIndex = this.accessories.findIndex(a => a.id === this.gameData.selectedAccessory);
     }
 
     // 키보드 이벤트 처리
