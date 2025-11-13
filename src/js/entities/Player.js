@@ -67,8 +67,9 @@ export class Player {
             // 달리기 이미지 로드
             let runImagePaths;
             if (selectedCharacter === 'hoodiecat') {
-                // hoodiecat은 cat_run1.png, cat_run2.png 형식
-                runImagePaths = [1, 2, 3, 4].map(i => `${basePath}/cat_run${i}.png`);
+                // hoodiecat은 cat_run_1.png, cat_run_2.png 형식
+                // 애니메이션 순서 조정: 1 -> 3 -> 2 -> 4 (더 자연스러운 달리기)
+                runImagePaths = [1, 3, 2, 4].map(i => `${basePath}/cat_run_${i}.png`);
             } else {
                 // cat은 cat_run_1.png, cat_run_2.png 형식
                 runImagePaths = [1, 2, 3, 4].map(i => `${basePath}/cat_run_${i}.png`);

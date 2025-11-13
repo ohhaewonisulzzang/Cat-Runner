@@ -16,7 +16,6 @@ export class GameStateManager {
         // 게임 데이터
         this.gameData = {
             score: 0,
-            highScore: this.loadHighScore(),
             obstaclesPassed: 0,
             gameSpeed: GAME_CONSTANTS.DIFFICULTY.INITIAL_SPEED,
             difficultyLevel: 1,
@@ -117,13 +116,6 @@ export class GameStateManager {
         if (prevScore < 10000 && this.gameData.score >= 10000) {
             this.triggerEnding();
             return; // 엔딩 트리거 후 더 이상 진행하지 않음
-        }
-
-        // 최고 점수 확인
-        if (this.gameData.score > this.gameData.highScore) {
-            this.gameData.highScore = this.gameData.score;
-            this.saveHighScore();
-            this.showNewRecord();
         }
 
         this.updateDifficulty();
@@ -398,7 +390,7 @@ export class GameStateManager {
         // 캐릭터 캐러셀 이벤트
         this.characters = [
             { id: 'cat', name: '일반 고양이', runImage: 'src/assets/images/player/cat/cat_run_1.png' },
-            { id: 'hoodiecat', name: '후드티 고양이', runImage: 'src/assets/images/player/hoodiecat/cat_run1.png' }
+            { id: 'hoodiecat', name: '후드티 고양이', runImage: 'src/assets/images/player/hoodiecat/cat_run_1.png' }
         ];
         this.currentCharacterIndex = 0;
 
@@ -442,13 +434,11 @@ export class GameStateManager {
     // 점수 표시 업데이트
     updateScoreDisplay() {
         document.querySelector('#currentScore span').textContent = this.gameData.score;
-        document.querySelector('#highScore span').textContent = this.gameData.highScore;
     }
 
     // 게임 오버 화면 업데이트
     updateGameOverScreen() {
         document.querySelector('#finalScore span').textContent = this.gameData.score;
-        document.querySelector('#bestScore span').textContent = this.gameData.highScore;
         document.querySelector('#obstacleCount span').textContent = this.gameData.obstaclesPassed;
     }
 
@@ -509,17 +499,6 @@ export class GameStateManager {
         this.currentCharacterIndex = this.characters.findIndex(c => c.id === this.gameData.selectedCharacter);
     }
 
-    // 새 기록 표시
-    showNewRecord() {
-        const bestScoreElement = document.querySelector('#bestScore');
-        bestScoreElement.classList.add('new-record');
-        bestScoreElement.textContent = 'NEW RECORD! ' + this.gameData.highScore;
-
-        setTimeout(() => {
-            bestScoreElement.classList.remove('new-record');
-        }, 3000);
-    }
-
     // 키보드 이벤트 처리
     handleKeyDown(e) {
         switch (e.code) {
@@ -547,14 +526,6 @@ export class GameStateManager {
     }
 
     // 로컬 스토리지 관리
-    loadHighScore() {
-        return parseInt(localStorage.getItem(STORAGE_KEYS.HIGH_SCORE)) || 0;
-    }
-
-    saveHighScore() {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, this.gameData.highScore.toString());
-    }
-
     loadSetting(key, defaultValue) {
         const storageKey = `catRunner${key}`;
         const stored = localStorage.getItem(storageKey);

@@ -57,11 +57,11 @@ export const GAME_CONSTANTS = {
 
     // 플레이어 설정
     PLAYER: {
-        WIDTH: 90,
-        HEIGHT: 90,
+        WIDTH: 130,
+        HEIGHT: 130,
         INITIAL_X: 256,
-        INITIAL_Y: 620,
-        GROUND_Y: 620,
+        INITIAL_Y: 590,
+        GROUND_Y: 590,
 
         // 물리
         GRAVITY: 0.6,
@@ -75,8 +75,8 @@ export const GAME_CONSTANTS = {
         ANIMATION_SPEED: 100,
 
         // 히트박스 패딩
-        HITBOX_PADDING_X: 20,
-        HITBOX_PADDING_Y: 15
+        HITBOX_PADDING_X: 25,
+        HITBOX_PADDING_Y: 20
     },
 
     // 장애물 설정
