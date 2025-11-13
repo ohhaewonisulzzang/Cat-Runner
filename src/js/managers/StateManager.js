@@ -392,7 +392,8 @@ export class GameStateManager {
             { id: 'none', name: '없음', previewImage: null },
             { id: 'halo', name: '천사 링', previewImage: 'src/assets/images/accessories/halo.png' },
             { id: 'crown', name: '왕관', previewImage: 'src/assets/images/accessories/crown.png' },
-            { id: 'glass', name: '인싸 안경', previewImage: 'src/assets/images/accessories/glass.png' }
+            { id: 'glass', name: '인싸 안경', previewImage: 'src/assets/images/accessories/glass.png' },
+            { id: 'chefhat', name: '셰프 모자', previewImage: 'src/assets/images/accessories/chef hat.png' }
         ];
         this.currentAccessoryIndex = 0;
 

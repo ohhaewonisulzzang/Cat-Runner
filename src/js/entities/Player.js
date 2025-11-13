@@ -93,7 +93,8 @@ export class Player {
             this.accessoryImages = {
                 halo: await ImageLoader.loadImage(`${basePath}/halo.png`),
                 crown: await ImageLoader.loadImage(`${basePath}/crown.png`),
-                glass: await ImageLoader.loadImage(`${basePath}/glass.png`)
+                glass: await ImageLoader.loadImage(`${basePath}/glass.png`),
+                chefhat: await ImageLoader.loadImage(`${basePath}/chef hat.png`)
             };
 
             this.accessoriesLoaded = true;
@@ -340,6 +341,13 @@ export class Player {
                 const glassShakeX = Math.sin(this.accessoryShakeTime * 10) * 1.5; // 아주 작은 좌우 흔들림
                 accessoryX = headCenterX - (accessoryWidth / 2) + 6 + glassShakeX;
                 accessoryY = headTopY + 23;
+                break;
+            case 'chefhat':
+                // 셰프 모자는 머리 위에
+                accessoryWidth = 70;
+                accessoryHeight = 70;
+                accessoryX = headCenterX - (accessoryWidth / 2) - 5; // 왼쪽으로
+                accessoryY = headTopY - 60; // 위로 올림
                 break;
         }
 
