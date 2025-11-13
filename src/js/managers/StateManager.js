@@ -514,14 +514,28 @@ export class GameStateManager {
             case KEY_CODES.SPACE:
                 e.preventDefault();
                 if (this.currentState === this.states.MENU) {
-                    this.setState(this.states.PLAYING);
+                    // 메뉴 화면 숨기기
+                    document.getElementById('menuScreen').classList.remove('active');
+
+                    // 스토리 재생 후 게임 시작
+                    this.storyScreen.show();
+                    this.storyScreen.start(() => {
+                        this.setState(this.states.PLAYING);
+                    });
                 }
                 // 게임 오버 시 스페이스바 비활성화 (메인 메뉴 버튼만 사용)
                 break;
 
             case KEY_CODES.ENTER:
                 if (this.currentState === this.states.MENU) {
-                    this.setState(this.states.PLAYING);
+                    // 메뉴 화면 숨기기
+                    document.getElementById('menuScreen').classList.remove('active');
+
+                    // 스토리 재생 후 게임 시작
+                    this.storyScreen.show();
+                    this.storyScreen.start(() => {
+                        this.setState(this.states.PLAYING);
+                    });
                 }
                 break;
         }
