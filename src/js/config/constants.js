@@ -175,8 +175,7 @@ export const GAME_CONSTANTS = {
 
     // 디버그
     DEBUG: {
-        DEFAULT_ENABLED: false,
-        TEST_MODE_ENABLED: false
+        DEFAULT_ENABLED: false
     }
 };
 
