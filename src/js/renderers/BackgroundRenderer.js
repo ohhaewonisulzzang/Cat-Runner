@@ -321,8 +321,8 @@ export class BackgroundRenderer {
         const scaleY = canvasHeight / img.height;
         const baseScale = Math.max(scaleX, scaleY);
 
-        // 가로를 엄청나게 길게 늘림 (10배)
-        const scaledWidth = img.width * baseScale * 10;
+        // 가로를 적당히 늘림 (1.7배 - 형태 인식 가능)
+        const scaledWidth = img.width * baseScale * 1.7;
         const scaledHeight = img.height * baseScale;
 
         // 배경 스크롤 속도 (극도로 느리게)
