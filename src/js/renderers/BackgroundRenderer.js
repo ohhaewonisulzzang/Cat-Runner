@@ -92,7 +92,8 @@ export class BackgroundRenderer {
             this.currentBackgroundMap = newMap;
             this.isTransitioning = true;
             this.transitionAlpha = 0;
-            // backgroundX 리셋하지 않음 - 연속적인 스크롤 유지
+            // 배경 위치를 처음으로 리셋
+            this.backgroundX = 0;
 
             console.log(`배경 전환: ${this.previousBackgroundMap} → ${newMap}`);
         }
