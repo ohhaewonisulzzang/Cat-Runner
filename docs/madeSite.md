@@ -114,10 +114,29 @@ https://YOUR_USERNAME.github.io/cat-runner/
 
 ## 5. 문제 해결
 
+### Jekyll UTF-8 인코딩 에러 ⚠️ (중요)
+**에러 메시지**: `The source text contains invalid characters for the used encoding UTF-8`
+
+**원인**: GitHub Pages는 기본적으로 Jekyll을 사용하는데, 한글 파일명/경로가 있으면 빌드 실패
+
+**해결 방법**: 프로젝트 루트에 `.nojekyll` 파일 생성
+```bash
+# 빈 .nojekyll 파일 생성
+touch .nojekyll
+# 또는 Windows에서
+type nul > .nojekyll
+
+# Git에 추가 및 푸시
+git add .nojekyll
+git commit -m "Add .nojekyll to bypass Jekyll build"
+git push origin sanghyeon
+```
+
 ### 페이지가 보이지 않는 경우
 - GitHub Pages 설정에서 올바른 브랜치와 폴더가 선택되었는지 확인
 - 배포 완료까지 1-2분 정도 소요될 수 있음
 - `index.html` 파일이 루트 디렉토리에 있는지 확인
+- Actions 탭에서 빌드 에러 확인
 
 ### 리소스 로딩 오류
 - 상대 경로 사용: `./images/cat.png` (절대 경로 `/images/cat.png` 대신)

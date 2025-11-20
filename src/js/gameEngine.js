@@ -46,10 +46,8 @@ export class GameEngine {
         // 맵 전환 효과
         this.transitionAlpha = 0;
 
-        // 디버그/테스트
+        // 디버그
         this.debugMode = GAME_CONSTANTS.DEBUG.DEFAULT_ENABLED;
-        this.testMode = GAME_CONSTANTS.DEBUG.TEST_MODE_ENABLED;
-        this.invincible = false;
 
         // 상태 변경 콜백 설정
         this.setupStateCallbacks();
@@ -83,32 +81,12 @@ export class GameEngine {
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
 
-        // 디버그/테스트 키 등록
+        // 디버그 키 등록
         document.addEventListener('keydown', (e) => {
             if (e.code === KEY_CODES.BACKQUOTE) {
                 e.preventDefault();
                 this.debugMode = !this.debugMode;
                 console.log(`디버그 모드: ${this.debugMode ? 'ON' : 'OFF'}`);
-            }
-
-            if (e.code === KEY_CODES.F12) {
-                e.preventDefault();
-                this.testMode = !this.testMode;
-                if (!this.testMode) this.invincible = false;
-                console.log(`테스트 모드: ${this.testMode ? 'ON' : 'OFF'}`);
-            }
-
-            if (this.testMode) {
-                if (e.code === KEY_CODES.DIGIT_1) {
-                    this.gameState.updateScore(100);
-                }
-                if (e.code === KEY_CODES.DIGIT_2) {
-                    this.invincible = !this.invincible;
-                }
-                if (e.code === KEY_CODES.DIGIT_3) {
-                    this.gameState.gameData.heatGauge = 10;
-                    this.gameState.updateHeatGaugeDisplay();
-                }
             }
         });
 
@@ -238,7 +216,7 @@ export class GameEngine {
             this.player.update(deltaTime);
             this.obstacleManager.update(deltaTime);
 
-            if (!this.invincible && this.obstacleManager.checkCollisions(this.player)) {
+            if (this.obstacleManager.checkCollisions(this.player)) {
                 this.gameState.setState('gameOver');
                 return;
             }
@@ -315,10 +293,6 @@ export class GameEngine {
         if (this.debugMode) {
             this.renderDebugInfo();
         }
-
-        if (this.testMode) {
-            this.renderTestModeLabel();
-        }
     }
 
     renderRoad() {
@@ -373,23 +347,6 @@ export class GameEngine {
         debugInfo.forEach((line, index) => {
             this.ctx.fillText(line, 20, 30 + index * 16);
         });
-    }
-
-    renderTestModeLabel() {
-        this.ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
-        this.ctx.fillRect(1080, 10, 190, 80);
-
-        this.ctx.strokeStyle = '#FF8C00';
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(1080, 10, 190, 80);
-
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 18px Arial';
-        this.ctx.fillText('TEST MODE', 1100, 35);
-
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText('1: +100 Score', 1095, 58);
-        this.ctx.fillText(`2: Invincible ${this.invincible ? 'ON' : 'OFF'}`, 1095, 78);
     }
 
     getGameStats() {

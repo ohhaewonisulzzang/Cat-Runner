@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('조작법:');
         console.log('- 스페이스바: 점프 (누르는 시간에 따라 높이 조절)');
         console.log('- ` (백틱): 디버그 모드 토글');
-        console.log('- F12: 테스트 모드 토글');
 
         // 성능 모니터링 (개발용)
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
