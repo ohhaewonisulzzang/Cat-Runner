@@ -321,12 +321,12 @@ export class BackgroundRenderer {
         const scaleY = canvasHeight / img.height;
         const baseScale = Math.max(scaleX, scaleY);
 
-        // 가로를 엄청 늘림 (3배)
-        const scaledWidth = img.width * baseScale * 3;
+        // 가로를 엄청나게 길게 늘림 (10배)
+        const scaledWidth = img.width * baseScale * 10;
         const scaledHeight = img.height * baseScale;
 
-        // 배경 스크롤 속도 (매우 느리게)
-        const parallaxSpeed = 0.01;
+        // 배경 스크롤 속도 (극도로 느리게)
+        const parallaxSpeed = 0.001;
 
         // 현재 스크롤 오프셋
         const scrollX = this.backgroundX * parallaxSpeed;
