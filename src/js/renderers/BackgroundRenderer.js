@@ -277,7 +277,7 @@ export class BackgroundRenderer {
         const img = this.backgroundImages[mapName];
 
         if (img) {
-            this.renderScrollingBackground(img);
+            this.renderLavaScrollingBackground(img);
         } else {
             this.renderLavaDefaultBackground();
         }
@@ -307,6 +307,36 @@ export class BackgroundRenderer {
         } else {
             this.renderArgentinaDefaultBackground();
         }
+    }
+
+    /**
+     * 용암 전용 스크롤링 배경 렌더링 (가로 확장, 매우 느린 속도)
+     */
+    renderLavaScrollingBackground(img) {
+        const canvasWidth = GAME_CONSTANTS.CANVAS.WIDTH;
+        const canvasHeight = GAME_CONSTANTS.CANVAS.HEIGHT;
+
+        // 이미지를 캔버스 크기에 맞춰 스케일
+        const scaleX = canvasWidth / img.width;
+        const scaleY = canvasHeight / img.height;
+        const baseScale = Math.max(scaleX, scaleY);
+
+        // 가로를 50% 더 늘림 (1.5배)
+        const scaledWidth = img.width * baseScale * 1.5;
+        const scaledHeight = img.height * baseScale;
+
+        // 배경 스크롤 속도 (매우 느리게)
+        const parallaxSpeed = 0.01;
+
+        // 현재 스크롤 오프셋
+        const scrollX = this.backgroundX * parallaxSpeed;
+
+        // 중앙 정렬
+        const x = scrollX;
+        const y = (canvasHeight - scaledHeight) / 2;
+
+        // 배경 이미지를 한 번만 그림 (반복 없음)
+        this.ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
     }
 
     /**
