@@ -1,5 +1,7 @@
 # GitHub Pages 배포 가이드
 
+이 가이드는 **sanghyeon 브랜치**의 파일들을 GitHub Pages에 배포하는 방법을 설명합니다.
+
 ## 1. GitHub 저장소 설정
 
 ### 저장소 생성 및 푸시
@@ -8,7 +10,7 @@
 git remote add origin https://github.com/YOUR_USERNAME/cat-runner.git
 git add .
 git commit -m "Initial commit"
-git push -u origin main
+git push -u origin sanghyeon
 ```
 
 ## 2. GitHub Pages 활성화
@@ -18,29 +20,34 @@ git push -u origin main
 2. **Settings** 탭 클릭
 3. 왼쪽 메뉴에서 **Pages** 클릭
 4. **Source** 섹션에서:
-   - Branch: `gh-pages` 선택 (또는 `main` 브랜치의 `/docs` 폴더)
+   - Branch: `sanghyeon` 선택 (또는 `gh-pages` 브랜치)
    - 폴더: `/ (root)` 선택
 5. **Save** 클릭
 
 ## 3. 배포 방법
 
-### 방법 A: 수동 배포 (gh-pages 브랜치 사용)
+**추천: 방법 A (가장 간단하고 빠름)**
+
+### 방법 A: sanghyeon 브랜치 직접 배포
 
 ```bash
-# 1. gh-pages 브랜치 생성 및 전환
-git checkout -b gh-pages
+# 1. sanghyeon 브랜치에 있는지 확인
+git branch
 
-# 2. 필요없는 파일 제거 (선택사항)
-# 게임 실행에 필요한 파일만 남기기
+# 2. sanghyeon 브랜치가 아니라면 전환
+git checkout sanghyeon
 
 # 3. 변경사항 커밋 및 푸시
 git add .
 git commit -m "Deploy to GitHub Pages"
-git push origin gh-pages
-
-# 4. main 브랜치로 돌아가기
-git checkout main
+git push origin sanghyeon
 ```
+
+**그 다음 GitHub에서 설정:**
+1. GitHub 저장소 → **Settings** → **Pages**
+2. **Source** → Branch: **sanghyeon** 선택, 폴더: **/ (root)** 선택
+3. **Save** 클릭
+4. 몇 분 후 `https://YOUR_USERNAME.github.io/cat-runner/` 에서 확인
 
 ### 방법 B: GitHub Actions를 사용한 자동 배포
 
@@ -52,7 +59,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - sanghyeon
 
 jobs:
   deploy:
@@ -69,7 +76,7 @@ jobs:
           publish_branch: gh-pages
 ```
 
-이 설정으로 `main` 브랜치에 푸시할 때마다 자동으로 배포됩니다.
+이 설정으로 `sanghyeon` 브랜치에 푸시할 때마다 자동으로 배포됩니다.
 
 ### 방법 C: gh-pages 패키지 사용
 
@@ -124,14 +131,11 @@ https://YOUR_USERNAME.github.io/cat-runner/
 ## 6. 업데이트 배포
 
 ```bash
-# 변경사항 커밋
+# sanghyeon 브랜치에서 변경사항 커밋 및 푸시
 git add .
 git commit -m "Update game"
-git push origin main
+git push origin sanghyeon
 
-# 자동 배포 설정이 없다면 수동으로:
-git checkout gh-pages
-git merge main
-git push origin gh-pages
-git checkout main
+# GitHub Pages가 sanghyeon 브랜치로 설정되어 있다면 자동으로 배포됩니다
+# 또는 GitHub Actions를 사용했다면 자동으로 gh-pages 브랜치에 배포됩니다
 ```
